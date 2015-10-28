@@ -1,13 +1,21 @@
 #include <openssl/evp.h>
- 
-#define BUFSIZE 1024
+#include <openssl/rand.h>
+
+int RAND_bytes(unsigned char *buf, int num);
+
+unsigned char key[32] = { 0xa5, 0x84, 0x99, 0x8d, 0x0d, 0xbd, 0xb1, 0x54,
+        0xbb, 0xc5, 0x4f, 0xed, 0x86, 0x9a, 0x66, 0x11,
+        0x6c, 0x70, 0x48, 0x50, 0xfd, 0xed, 0xb9, 0xda,
+        0x51, 0xa3, 0x40, 0x8f, 0x92, 0x9d, 0x38, 0xf5 }; /* 256- битный ключ */
+unsigned char iv[8]; /* вектор инициализации */
+
+
+#define BUFSIZE 1024 * 4
 
 int do_crypt(char *infile, char *outfile)
 {
 	int outlen, inlen;
 	FILE *in, *out;
-	unsigned char key[32]; /* 256- битный ключ */
-	unsigned char iv[8]; /* вектор инициализации */
 	unsigned char inbuf[BUFSIZE], outbuf[BUFSIZE];
 	EVP_CIPHER_CTX ctx;
 	const EVP_CIPHER * cipher;
@@ -45,8 +53,6 @@ int do_decrypt(char *infile, char *outfile)
 {
 	int outlen, inlen;
 	FILE *in, *out;
-	unsigned char key[32]; /* 256- битный ключ */
-	unsigned char iv[8]; /* вектор инициализации */
 	unsigned char inbuf[BUFSIZE], outbuf[BUFSIZE];
 	EVP_CIPHER_CTX ctx;
 	const EVP_CIPHER * cipher;
@@ -82,6 +88,8 @@ int do_decrypt(char *infile, char *outfile)
 
 int main(int argc, char *argv[])
 {
+	RAND_bytes(iv, 8);
+
 	do_crypt("orig.txt", "encrypted.txt");
 	do_decrypt("encrypted.txt", "decrypted.txt");
 	return 0;

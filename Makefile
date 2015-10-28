@@ -1,7 +1,7 @@
 CC=gcc
 CXX=g++
 RM=rm -f
-CFLAGS=-Wall -Werror=implicit-function-declaration -I/usr/include -L/usr/lib
+CFLAGS=-Wall -Werror=implicit-function-declaration -I./include
 LDLIBS=./lib/libssl.a ./lib/libcrypto.a ./lib/libgdi32.a
 LDFLAGS=
 SRCS=main.c
