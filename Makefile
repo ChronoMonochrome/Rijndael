@@ -1,15 +1,16 @@
 CC=gcc
 CXX=g++
 RM=rm -f
-CFLAGS=-Wall -Werror=implicit-function-declaration
-LDFLAGS=-lssl -lcrypto
+CFLAGS=-Wall -Werror=implicit-function-declaration -I/usr/include -L/usr/lib
+LDLIBS=./lib/libssl.a ./lib/libcrypto.a ./lib/libgdi32.a
+LDFLAGS=
 SRCS=main.c
 OBJS=$(subst .c,.o,$(SRCS))
 
-all: myAES
+all: myAES.exe
 
-myAES: $(OBJS)
-	$(CC) -o myAES $(OBJS) $(LDFLAGS) $(LDLIBS) 
+myAES.exe: $(OBJS)
+	$(CC) -o myAES.exe $(OBJS) $(LDFLAGS) $(LDLIBS) 
 
 depend: .depend
 
