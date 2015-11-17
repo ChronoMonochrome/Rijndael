@@ -1,5 +1,5 @@
-#CC=i586-mingw32msvc-gcc
-CC=gcc
+CC=i586-mingw32msvc-gcc
+#CC=gcc
 CXX=g++
 RM=rm -f
 CFLAGS=-Wall -Werror=implicit-function-declaration -I./include

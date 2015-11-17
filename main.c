@@ -1,3 +1,5 @@
+#include <openssl/evp.h>
+#include <openssl/rand.h>
 #include <openssl/pem.h>
 #include <openssl/ssl.h>
 #include <openssl/rsa.h>
@@ -5,6 +7,8 @@
 #include <openssl/bio.h>
 #include <openssl/err.h>
 #include <stdio.h>
+ 
+#define DEBUG 1
  
 int padding = RSA_PKCS1_PADDING;
  
@@ -34,30 +38,29 @@ RSA * createRSA(unsigned char * key,int public)
     return rsa;
 }
  
-int public_encrypt(unsigned char * data,int data_len,unsigned char * key, unsigned char *encrypted)
+int RSA_do_public_encrypt(char * data, unsigned int data_len, unsigned char * key, char *encrypted)
 {
     RSA * rsa = createRSA(key,1);
-    int result = RSA_public_encrypt(data_len,data,encrypted,rsa,padding);
+    int result = RSA_public_encrypt(data_len, data, encrypted, rsa, padding);
     return result;
 }
-int private_decrypt(unsigned char * enc_data,int data_len,unsigned char * key, unsigned char *decrypted)
+int RSA_do_private_decrypt(char * enc_data, unsigned int data_len, unsigned char * key,  char *decrypted)
 {
-    RSA * rsa = createRSA(key,0);
-    int  result = RSA_private_decrypt(data_len,enc_data,decrypted,rsa,padding);
+    RSA * rsa = createRSA(key, 0);
+    int  result = RSA_private_decrypt(data_len, enc_data, decrypted, rsa, padding);
     return result;
 }
  
- 
-int private_encrypt(unsigned char * data,int data_len,unsigned char * key, unsigned char *encrypted)
+int RSA_do_private_encrypt( char * data, unsigned int data_len, unsigned char * key,  char *encrypted)
 {
-    RSA * rsa = createRSA(key,0);
-    int result = RSA_private_encrypt(data_len,data,encrypted,rsa,padding);
+    RSA * rsa = createRSA(key, 0);
+    int result = RSA_private_encrypt(data_len, data, encrypted, rsa, padding);
     return result;
 }
-int public_decrypt(unsigned char * enc_data,int data_len,unsigned char * key, unsigned char *decrypted)
+int RSA_do_public_decrypt( char * enc_data, unsigned int data_len, unsigned char * key,  char *decrypted)
 {
-    RSA * rsa = createRSA(key,1);
-    int  result = RSA_public_decrypt(data_len,enc_data,decrypted,rsa,padding);
+    RSA * rsa = createRSA(key, 1);
+    int  result = RSA_public_decrypt(data_len, enc_data, decrypted, rsa, padding);
     return result;
 }
  
@@ -70,8 +73,92 @@ void printLastError(char *msg)
     free(err);
 }
 
+int RAND_bytes(unsigned char *buf, int num);
 
-	char publicKey[]="-----BEGIN PUBLIC KEY-----\n"\
+unsigned char key[32] = { 0xa5, 0x84, 0x99, 0x8d, 0x0d, 0xbd, 0xb1, 0x54,
+        0xbb, 0xc5, 0x4f, 0xed, 0x86, 0x9a, 0x66, 0x11,
+        0x6c, 0x70, 0x48, 0x50, 0xfd, 0xed, 0xb9, 0xda,
+        0x51, 0xa3, 0x40, 0x8f, 0x92, 0x9d, 0x38, 0xf5 }; /* 256-битный ключ AES256*/
+unsigned char iv[8]; /* вектор инициализации */
+
+
+#define BUFSIZE 1024 * 4
+
+int AES_do_crypt_from_file(char *infile, char *outfile, char *iv)
+{
+	int outlen, inlen;
+	FILE *in, *out;
+	unsigned char inbuf[BUFSIZE], outbuf[BUFSIZE];
+	EVP_CIPHER_CTX ctx;
+	const EVP_CIPHER * cipher;
+
+	in = fopen(infile, "r");
+	out = fopen(outfile, "w");
+
+	/* Обнуляем структуру контекста */
+	EVP_CIPHER_CTX_init(&ctx);
+
+	/* Выбираем алгоритм шифрования */
+	cipher = EVP_aes_256_cfb();
+ 
+	/* Инициализируем контекст алгоритма */
+	EVP_EncryptInit(&ctx, cipher, iv, NULL);
+ 
+	/* Шифруем данные */
+	for(;;) {
+		inlen = fread(inbuf, 1, BUFSIZE, in);
+		if(inlen <= 0) break;
+		if(!EVP_EncryptUpdate(&ctx, outbuf, &outlen, inbuf, inlen)) return 0;
+		fwrite(outbuf, 1, outlen, out);
+	}
+
+	if(!EVP_EncryptFinal(&ctx, outbuf, &outlen))
+		return 0;
+	fwrite(outbuf, 1, outlen, out);
+	EVP_CIPHER_CTX_cleanup(&ctx);
+	fclose(in);
+	fclose(out);
+	return 1;
+}
+
+int AES_do_decrypt_from_file(char *infile, char *outfile, char *iv)
+{
+	int outlen, inlen;
+	FILE *in, *out;
+	unsigned char inbuf[BUFSIZE], outbuf[BUFSIZE];
+	EVP_CIPHER_CTX ctx;
+	const EVP_CIPHER * cipher;
+
+	in = fopen(infile, "r");
+	out = fopen(outfile, "w");
+
+	/* Обнуляем структуру контекста */
+	EVP_CIPHER_CTX_init(&ctx);
+
+	/* Выбираем алгоритм шифрования */
+	cipher = EVP_aes_256_cfb();
+ 
+	/* Инициализируем контекст алгоритма */
+	EVP_DecryptInit(&ctx, cipher, iv, NULL);
+ 
+	/* Шифруем данные */
+	for(;;) {
+		inlen = fread(inbuf, 1, BUFSIZE, in);
+		if(inlen <= 0) break;
+		if(!EVP_DecryptUpdate(&ctx, outbuf, &outlen, inbuf, inlen)) return 0;
+		fwrite(outbuf, 1, outlen, out);
+	}
+
+	if(!EVP_DecryptFinal(&ctx, outbuf, &outlen))
+		return 0;
+	fwrite(outbuf, 1, outlen, out);
+	EVP_CIPHER_CTX_cleanup(&ctx);
+	fclose(in);
+	fclose(out);
+	return 1;
+}
+
+char publicKey[]="-----BEGIN PUBLIC KEY-----\n"\
 "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAy8Dbv8prpJ/0kKhlGeJY\n"\
 "ozo2t60EG8L0561g13R29LvMR5hyvGZlGJpmn65+A4xHXInJYiPuKzrKUnApeLZ+\n"\
 "vw1HocOAZtWK0z3r26uA8kQYOKX9Qt/DbCdvsF9wF8gRK0ptx9M6R13NvBxvVQAp\n"\
@@ -81,7 +168,7 @@ void printLastError(char *msg)
 "wQIDAQAB\n"\
 "-----END PUBLIC KEY-----\n";
   
-	char privateKey[]="-----BEGIN RSA PRIVATE KEY-----\n"\
+char privateKey[]="-----BEGIN RSA PRIVATE KEY-----\n"\
 "MIIEowIBAAKCAQEAy8Dbv8prpJ/0kKhlGeJYozo2t60EG8L0561g13R29LvMR5hy\n"\
 "vGZlGJpmn65+A4xHXInJYiPuKzrKUnApeLZ+vw1HocOAZtWK0z3r26uA8kQYOKX9\n"\
 "Qt/DbCdvsF9wF8gRK0ptx9M6R13NvBxvVQApfc9jB9nTzphOgM4JiEYvlV8FLhg9\n"\
@@ -108,9 +195,37 @@ void printLastError(char *msg)
 "w6z2vEfRVQDq4Hm4vBzjdi3QfYLNkTiTqLcvgWZ+eX44ogXtdTDO7c+GeMKWz4XX\n"\
 "uJSUVL5+CVjKLjZEJ6Qc2WZLl94xSwL71E41H4YciVnSCQxVc4Jw\n"\
 "-----END RSA PRIVATE KEY-----\n";
- 
-#define BUFSIZE 1 * 1024 * 1024
- 
+
+int RSA_do_crypt_source(char *plainText, char *publicKey, char *encrypted_plainText)
+{
+	
+	int encrypted_length = RSA_do_public_encrypt(plainText, strlen(plainText), publicKey, encrypted_plainText);
+#ifdef DEBUG
+	if (encrypted_length < 0)
+		printLastError("Public Encrypt failed ");
+		
+	printf("Encrypted length =%d\n",encrypted_length);
+#endif
+	
+	return encrypted_length;
+}
+
+int RSA_do_decrypt_source(char *plainText, char *privateKey, char *decrypted_plainText)
+{
+	
+	int decrypted_length = RSA_do_private_decrypt(plainText, strlen(plainText), privateKey, decrypted_plainText);
+#ifdef DEBUG
+	if (decrypted_length < 0)
+		printLastError("Private Decrypt failed ");
+		
+	printf("Decrypted length =%d\n", decrypted_length);
+#endif
+	
+	return decrypted_length;
+}
+
+
+#define BUFSIZE 4 * 1024
 void RSA_do_crypt_from_file(char *infile, char *outfile)
 {
 	
@@ -122,7 +237,7 @@ void RSA_do_crypt_from_file(char *infile, char *outfile)
 	out = fopen(outfile, "w");
 	inlen = fread(inbuf, 1, BUFSIZE, in);
  
-	int encrypted_length = public_encrypt(inbuf, inlen, publicKey, outbuf);
+	int encrypted_length = RSA_do_public_encrypt(inbuf, inlen, publicKey, outbuf);
 	if(encrypted_length == -1)
 	{
 		printLastError("Public Encrypt failed ");
@@ -147,7 +262,7 @@ void RSA_do_decrypt_from_file(char *infile, char *outfile)
 	out = fopen(outfile, "w");
 	inlen = fread(inbuf, 1, BUFSIZE, in);
  
-	int decrypted_length = private_decrypt(inbuf, inlen, privateKey, outbuf);
+	int decrypted_length = RSA_do_private_decrypt(inbuf, inlen, privateKey, outbuf);
 	if(decrypted_length == -1)
 	{
 		printLastError("Public Encrypt failed ");
@@ -161,12 +276,23 @@ fail:
 	fclose(out);
 }
  
-int main(){
- 
-	//char plainText[2048/8] = "Hello this is Ravi"; //key length : 2048
 
-	RSA_do_crypt_from_file("orig.txt", "RSA_en.txt");
-	RSA_do_decrypt_from_file("RSA_en.txt", "RSA_de.txt");
-	system("pause"); 
- 
+int main(int argc, char *argv[])
+{
+	unsigned char encrypted_iv[BUFSIZE]={};
+	unsigned char decrypted_iv[8]={};
+	RAND_bytes(iv, 8);
+	
+	// cipher
+	RSA_do_crypt_source(iv, publicKey, encrypted_iv);
+	AES_do_crypt_from_file("orig.txt", "AES_cipher.txt", iv);
+	RSA_do_crypt_from_file("AES_cipher.txt", "RSA_AES_cipher.txt");
+	
+	// decipher
+	RSA_do_decrypt_source(encrypted_iv, privateKey, decrypted_iv);
+	RSA_do_decrypt_from_file("RSA_AES_cipher.txt", "decrypted_RSA_AES_cipher.txt");
+	AES_do_decrypt_from_file("decrypted_RSA_AES_cipher.txt", "decrypted.txt", iv);
+	
+	return 0;
 }
+ 
