@@ -9,6 +9,8 @@
 #include <stdio.h>
  
 #define DEBUG 1
+
+int strlen(char*);
  
 int padding = RSA_PKCS1_PADDING;
  
@@ -79,7 +81,7 @@ unsigned char key[32] = { 0xa5, 0x84, 0x99, 0x8d, 0x0d, 0xbd, 0xb1, 0x54,
         0xbb, 0xc5, 0x4f, 0xed, 0x86, 0x9a, 0x66, 0x11,
         0x6c, 0x70, 0x48, 0x50, 0xfd, 0xed, 0xb9, 0xda,
         0x51, 0xa3, 0x40, 0x8f, 0x92, 0x9d, 0x38, 0xf5 }; /* 256-битный ключ AES256*/
-unsigned char iv[8]; /* вектор инициализации */
+unsigned char iv[9]; /* вектор инициализации */
 
 
 #define BUFSIZE 1024 * 4
@@ -226,7 +228,7 @@ int RSA_do_decrypt_source(char *plainText, char *privateKey, char *decrypted_pla
 
 
 #define BUFSIZE 4 * 1024
-void RSA_do_crypt_from_file(char *infile, char *outfile)
+int RSA_do_crypt_from_file(char *infile, char *outfile)
 {
 	
 	int outlen, inlen;
@@ -249,6 +251,8 @@ void RSA_do_crypt_from_file(char *infile, char *outfile)
 fail:
 	fclose(in);
 	fclose(out);
+
+	return encrypted_length;
 }
 
 void RSA_do_decrypt_from_file(char *infile, char *outfile)
@@ -275,22 +279,53 @@ fail:
 	fclose(in);
 	fclose(out);
 }
+
+int readFromFile(char *infile, char *inbuf, int inbuf_len)
+{
+        FILE *in = fopen(infile, "r");
+	int inlen = fread(inbuf, 1, inbuf_len, in);
+	fclose(in);
+
+	return inlen;
+}
+
+int writeToFile(char *outfile, char *outbuf, int outbuf_len)
+{
+        FILE *out = fopen(outfile, "w");
+	int outlen = fwrite(outbuf, 1, outbuf_len, out);
+	fclose(out);
+
+	return outlen;
+}
  
 
 int main(int argc, char *argv[])
 {
+	int i, len;
 	unsigned char encrypted_iv[BUFSIZE]={};
-	unsigned char decrypted_iv[8]={};
+	unsigned char decrypted_iv[BUFSIZE]={};
 	RAND_bytes(iv, 8);
 	
 	// cipher
-	RSA_do_crypt_source(iv, publicKey, encrypted_iv);
+	printf("iv: \n");
+	for(i = 0; i < 9; i++) printf("%d \n", iv[i]);
+	len = RSA_do_crypt_source(iv, publicKey, encrypted_iv);
+	writeToFile("encrypted_iv.txt", encrypted_iv, len);
+	printf("creating AES_cipher.txt\n");
 	AES_do_crypt_from_file("orig.txt", "AES_cipher.txt", iv);
+	printf("creating RSA_AES_cipher.txt\n");
 	RSA_do_crypt_from_file("AES_cipher.txt", "RSA_AES_cipher.txt");
 	
 	// decipher
-	RSA_do_decrypt_source(encrypted_iv, privateKey, decrypted_iv);
+	printf("creating iv\n");
+	RSA_do_decrypt_from_file("encrypted_iv.txt", "decrypted_iv.txt");
+	readFromFile("decrypted_iv.txt", decrypted_iv, len);
+	//RSA_do_decrypt_source(encrypted_iv, privateKey, decrypted_iv);
+	printf("decrypted_iv: \n");
+	for(i = 0; i < 9; i++) printf("%d \n", decrypted_iv[i]);
+	printf("creating decrypted_RSA_AES_cipher.txt\n");
 	RSA_do_decrypt_from_file("RSA_AES_cipher.txt", "decrypted_RSA_AES_cipher.txt");
+	printf("creating decrypted.txt\n");
 	AES_do_decrypt_from_file("decrypted_RSA_AES_cipher.txt", "decrypted.txt", iv);
 	
 	return 0;

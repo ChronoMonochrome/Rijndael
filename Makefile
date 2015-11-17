@@ -1,17 +1,15 @@
-CC=i586-mingw32msvc-gcc
-#CC=gcc
+CC=gcc
 CXX=g++
 RM=rm -f
-CFLAGS=-Wall -Werror=implicit-function-declaration -I./include
-LDLIBS=./lib/libssl.a ./lib/libcrypto.a ./lib/libgdi32.a
-LDFLAGS=
+CFLAGS=-Wall -Werror=implicit-function-declaration
+LDFLAGS=-lssl -lcrypto
 SRCS=main.c
 OBJS=$(subst .c,.o,$(SRCS))
 
-all: myAES.exe
+all: myAES
 
-myAES.exe: $(OBJS)
-	$(CC) -o myAES.exe $(OBJS) $(LDFLAGS) $(LDLIBS) 
+myAES: $(OBJS)
+	$(CC) -o myAES $(OBJS) $(LDFLAGS) $(LDLIBS) 
 
 depend: .depend
 
