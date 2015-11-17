@@ -1,3 +1,4 @@
+#CC=i586-mingw32msvc-gcc
 CC=gcc
 CXX=g++
 RM=rm -f

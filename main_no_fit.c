@@ -69,9 +69,12 @@ void printLastError(char *msg)
     printf("%s ERROR: %s\n",msg, err);
     free(err);
 }
-
-
-	char publicKey[]="-----BEGIN PUBLIC KEY-----\n"\
+ 
+int main(){
+ 
+  char plainText[2048/8] = "Hello this is Ravi"; //key length : 2048
+ 
+ char publicKey[]="-----BEGIN PUBLIC KEY-----\n"\
 "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAy8Dbv8prpJ/0kKhlGeJY\n"\
 "ozo2t60EG8L0561g13R29LvMR5hyvGZlGJpmn65+A4xHXInJYiPuKzrKUnApeLZ+\n"\
 "vw1HocOAZtWK0z3r26uA8kQYOKX9Qt/DbCdvsF9wF8gRK0ptx9M6R13NvBxvVQAp\n"\
@@ -81,7 +84,7 @@ void printLastError(char *msg)
 "wQIDAQAB\n"\
 "-----END PUBLIC KEY-----\n";
   
-	char privateKey[]="-----BEGIN RSA PRIVATE KEY-----\n"\
+ char privateKey[]="-----BEGIN RSA PRIVATE KEY-----\n"\
 "MIIEowIBAAKCAQEAy8Dbv8prpJ/0kKhlGeJYozo2t60EG8L0561g13R29LvMR5hy\n"\
 "vGZlGJpmn65+A4xHXInJYiPuKzrKUnApeLZ+vw1HocOAZtWK0z3r26uA8kQYOKX9\n"\
 "Qt/DbCdvsF9wF8gRK0ptx9M6R13NvBxvVQApfc9jB9nTzphOgM4JiEYvlV8FLhg9\n"\
@@ -109,64 +112,46 @@ void printLastError(char *msg)
 "uJSUVL5+CVjKLjZEJ6Qc2WZLl94xSwL71E41H4YciVnSCQxVc4Jw\n"\
 "-----END RSA PRIVATE KEY-----\n";
  
-#define BUFSIZE 1 * 1024 * 1024
+    
+unsigned char  encrypted[4098]={};
+unsigned char decrypted[4098]={};
  
-void RSA_do_crypt_from_file(char *infile, char *outfile)
+int encrypted_length= public_encrypt(plainText,strlen(plainText),publicKey,encrypted);
+if(encrypted_length == -1)
 {
-	
-	int outlen, inlen;
-	FILE *in, *out;
-	unsigned char inbuf[BUFSIZE], outbuf[BUFSIZE];
- 
-	in = fopen(infile, "r");
-	out = fopen(outfile, "w");
-	inlen = fread(inbuf, 1, BUFSIZE, in);
- 
-	int encrypted_length = public_encrypt(inbuf, inlen, publicKey, outbuf);
-	if(encrypted_length == -1)
-	{
-		printLastError("Public Encrypt failed ");
-		goto fail;
-		//exit(0);
-	}
-	printf("Encrypted length =%d\n",encrypted_length);
-	fwrite(outbuf, 1, encrypted_length, out);
-fail:
-	fclose(in);
-	fclose(out);
+    printLastError("Public Encrypt failed ");
+    exit(0);
 }
-
-void RSA_do_decrypt_from_file(char *infile, char *outfile)
+printf("Encrypted length =%d\n",encrypted_length);
+ 
+int decrypted_length = private_decrypt(encrypted,encrypted_length,privateKey, decrypted);
+if(decrypted_length == -1)
 {
-	
-	int outlen, inlen;
-	FILE *in, *out;
-	unsigned char inbuf[BUFSIZE], outbuf[BUFSIZE];
- 
-	in = fopen(infile, "r");
-	out = fopen(outfile, "w");
-	inlen = fread(inbuf, 1, BUFSIZE, in);
- 
-	int decrypted_length = private_decrypt(inbuf, inlen, privateKey, outbuf);
-	if(decrypted_length == -1)
-	{
-		printLastError("Public Encrypt failed ");
-		goto fail;
-		//exit(0);
-	}
-	printf("Encrypted length =%d\n",decrypted_length);
-	fwrite(outbuf, 1, decrypted_length, out);
-fail:
-	fclose(in);
-	fclose(out);
+    printLastError("Private Decrypt failed ");
+    exit(0);
 }
+printf("Decrypted Text =%s\n",decrypted);
+printf("Decrypted Length =%d\n",decrypted_length);
  
-int main(){
  
-	//char plainText[2048/8] = "Hello this is Ravi"; //key length : 2048
-
-	RSA_do_crypt_from_file("orig.txt", "RSA_en.txt");
-	RSA_do_decrypt_from_file("RSA_en.txt", "RSA_de.txt");
-	system("pause"); 
+encrypted_length= private_encrypt(plainText,strlen(plainText),privateKey,encrypted);
+if(encrypted_length == -1)
+{
+    printLastError("Private Encrypt failed");
+    exit(0);
+}
+printf("Encrypted length =%d\n",encrypted_length);
+ 
+decrypted_length = public_decrypt(encrypted,encrypted_length,publicKey, decrypted);
+if(decrypted_length == -1)
+{
+    printLastError("Public Decrypt failed");
+    exit(0);
+}
+printf("Decrypted Text =%s\n",decrypted);
+printf("Decrypted Length =%d\n",decrypted_length);
+ 
+ 
+system("pause"); 
  
 }
