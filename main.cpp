@@ -3,8 +3,8 @@
 #include <stdio.h>
 #include <ctime>
 
-#include "private/misc.h"
-#include "private/aes.h"
+#include "misc.h"
+#include "aes.h"
 #include "rsa.h"
 #include "file.h"
  
@@ -36,7 +36,7 @@ void encrypt(char *infile, char *outfile, char *pubKey)
 	fwrite(encrypted_iv, len, 1, encrypted);
 
 	printf("creating AES_cipher.txt\n");
-	AES_do_crypt_from_file(infile, "AES_cipher.txt", iv);
+	aes::AES_do_crypt_from_file(infile, "AES_cipher.txt", iv);
 	
 	printf("creating RSA_AES_cipher.txt\n");
 	rsa::RSA_do_encrypt_from_file("AES_cipher.txt", "RSA_AES_cipher.txt", "public_key");
@@ -96,7 +96,7 @@ void decrypt(char *infile, char *outfile, char *privKey)
 	rsa::RSA_do_decrypt_from_file("encrypted_message.txt", "decrypted_RSA_AES_cipher.txt", privKey);
 	remove("encrypted_message.txt");
 	printf("creating %s\n", outfile);
-	AES_do_decrypt_from_file("decrypted_RSA_AES_cipher.txt", outfile, decrypted_iv);
+	aes::AES_do_decrypt_from_file("decrypted_RSA_AES_cipher.txt", outfile, decrypted_iv);
 
 	remove("decrypted_RSA_AES_cipher.txt");
 
