@@ -3,7 +3,7 @@ CXX=g++
 RM=rm -f
 CFLAGS=-Wall -Wno-pointer-sign -Wno-unused-variable -Werror=implicit-function-declaration
 LDFLAGS=-lssl -lcrypto
-SRCS=main.c
+SRCS=main.c rsa.c aes.c
 OBJS=$(subst .c,.o,$(SRCS))
 
 all: myAES

@@ -7,159 +7,12 @@
 #include <openssl/bio.h>
 #include <openssl/err.h>
 #include <stdio.h>
+
+#include "private/private.h"
  
-#define DEBUG 1
 
-int strlen(char*);
+unsigned char iv[8];
  
-int padding = RSA_PKCS1_PADDING;
- 
-RSA * createRSA(unsigned char * key,int public)
-{
-    RSA *rsa= NULL;
-    BIO *keybio ;
-    keybio = BIO_new_mem_buf(key, -1);
-    if (keybio==NULL)
-    {
-        printf( "Failed to create key BIO");
-        return 0;
-    }
-    if(public)
-    {
-        rsa = PEM_read_bio_RSA_PUBKEY(keybio, &rsa,NULL, NULL);
-    }
-    else
-    {
-        rsa = PEM_read_bio_RSAPrivateKey(keybio, &rsa,NULL, NULL);
-    }
-    if(rsa == NULL)
-    {
-        printf( "Failed to create RSA");
-    }
- 
-    return rsa;
-}
- 
-int RSA_do_public_encrypt(char * data, unsigned int data_len, unsigned char * key, char *encrypted)
-{
-    RSA * rsa = createRSA(key,1);
-    int result = RSA_public_encrypt(data_len, data, encrypted, rsa, padding);
-    return result;
-}
-int RSA_do_private_decrypt(char * enc_data, unsigned int data_len, unsigned char * key,  char *decrypted)
-{
-    RSA * rsa = createRSA(key, 0);
-    int  result = RSA_private_decrypt(data_len, enc_data, decrypted, rsa, padding);
-    return result;
-}
- 
-int RSA_do_private_encrypt( char * data, unsigned int data_len, unsigned char * key,  char *encrypted)
-{
-    RSA * rsa = createRSA(key, 0);
-    int result = RSA_private_encrypt(data_len, data, encrypted, rsa, padding);
-    return result;
-}
-int RSA_do_public_decrypt( char * enc_data, unsigned int data_len, unsigned char * key,  char *decrypted)
-{
-    RSA * rsa = createRSA(key, 1);
-    int  result = RSA_public_decrypt(data_len, enc_data, decrypted, rsa, padding);
-    return result;
-}
- 
-void printLastError(char *msg)
-{
-    char * err = malloc(130);;
-    ERR_load_crypto_strings();
-    ERR_error_string(ERR_get_error(), err);
-    printf("%s ERROR: %s\n",msg, err);
-    free(err);
-}
-
-int RAND_bytes(unsigned char *buf, int num);
-
-unsigned char key[32] = { 0xa5, 0x84, 0x99, 0x8d, 0x0d, 0xbd, 0xb1, 0x54,
-        0xbb, 0xc5, 0x4f, 0xed, 0x86, 0x9a, 0x66, 0x11,
-        0x6c, 0x70, 0x48, 0x50, 0xfd, 0xed, 0xb9, 0xda,
-        0x51, 0xa3, 0x40, 0x8f, 0x92, 0x9d, 0x38, 0xf5 }; /* 256-битный ключ AES256*/
-unsigned char iv[9]; /* вектор инициализации */
-
-
-#define BUFSIZE 1024 * 4
-
-int AES_do_crypt_from_file(char *infile, char *outfile, char *iv)
-{
-	int outlen, inlen;
-	FILE *in, *out;
-	unsigned char inbuf[BUFSIZE], outbuf[BUFSIZE];
-	EVP_CIPHER_CTX ctx;
-	const EVP_CIPHER * cipher;
-
-	in = fopen(infile, "r");
-	out = fopen(outfile, "w");
-
-	/* Обнуляем структуру контекста */
-	EVP_CIPHER_CTX_init(&ctx);
-
-	/* Выбираем алгоритм шифрования */
-	cipher = EVP_aes_256_cfb();
- 
-	/* Инициализируем контекст алгоритма */
-	EVP_EncryptInit(&ctx, cipher, iv, NULL);
- 
-	/* Шифруем данные */
-	for(;;) {
-		inlen = fread(inbuf, 1, BUFSIZE, in);
-		if(inlen <= 0) break;
-		if(!EVP_EncryptUpdate(&ctx, outbuf, &outlen, inbuf, inlen)) return 0;
-		fwrite(outbuf, 1, outlen, out);
-	}
-
-	if(!EVP_EncryptFinal(&ctx, outbuf, &outlen))
-		return 0;
-	fwrite(outbuf, 1, outlen, out);
-	EVP_CIPHER_CTX_cleanup(&ctx);
-	fclose(in);
-	fclose(out);
-	return 1;
-}
-
-int AES_do_decrypt_from_file(char *infile, char *outfile, char *iv)
-{
-	int outlen, inlen;
-	FILE *in, *out;
-	unsigned char inbuf[BUFSIZE], outbuf[BUFSIZE];
-	EVP_CIPHER_CTX ctx;
-	const EVP_CIPHER * cipher;
-
-	in = fopen(infile, "r");
-	out = fopen(outfile, "w");
-
-	/* Обнуляем структуру контекста */
-	EVP_CIPHER_CTX_init(&ctx);
-
-	/* Выбираем алгоритм шифрования */
-	cipher = EVP_aes_256_cfb();
- 
-	/* Инициализируем контекст алгоритма */
-	EVP_DecryptInit(&ctx, cipher, iv, NULL);
- 
-	/* Шифруем данные */
-	for(;;) {
-		inlen = fread(inbuf, 1, BUFSIZE, in);
-		if(inlen <= 0) break;
-		if(!EVP_DecryptUpdate(&ctx, outbuf, &outlen, inbuf, inlen)) return 0;
-		fwrite(outbuf, 1, outlen, out);
-	}
-
-	if(!EVP_DecryptFinal(&ctx, outbuf, &outlen))
-		return 0;
-	fwrite(outbuf, 1, outlen, out);
-	EVP_CIPHER_CTX_cleanup(&ctx);
-	fclose(in);
-	fclose(out);
-	return 1;
-}
-
 char publicKey[]="-----BEGIN PUBLIC KEY-----\n"\
 "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAy8Dbv8prpJ/0kKhlGeJY\n"\
 "ozo2t60EG8L0561g13R29LvMR5hyvGZlGJpmn65+A4xHXInJYiPuKzrKUnApeLZ+\n"\
@@ -227,7 +80,6 @@ int RSA_do_decrypt_source(char *plainText, char *privateKey, char *decrypted_pla
 }
 
 
-#define BUFSIZE 4 * 1024
 int RSA_do_crypt_from_file(char *infile, char *outfile)
 {
 	
