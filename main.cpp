@@ -114,11 +114,11 @@ void encrypt(char *infile, char *outfile, char *pubKey)
  	remove("encrypted_iv.txt");
 
 	free(buf);
-	free(encrypted_iv);
 	free(decrypted_iv);
+	free(encrypted_iv);
 }
 
-void decrypt()
+void decrypt(char *infile, char *outfile, char *privKey)
 {
 	int i;
 	int len, len1;
@@ -129,12 +129,10 @@ void decrypt()
 	encrypted_iv = (unsigned char *)malloc(BUFSIZE);
 	decrypted_iv = (unsigned char *)malloc(BUFSIZE);
 	buf = (unsigned char *)malloc(BUFSIZE);
-//	srand(time(0));
-//	RAND_bytes(iv, 8);
 
 	// decipher
 	printf("creating iv\n");
-	FILE *encrypted = fopen("encrypted.txt", "r");
+	FILE *encrypted = fopen(infile, "r");
 	fread(&len, sizeof(int), 1, encrypted);
 
 	fread(encrypted_iv, len, 1, encrypted);
@@ -149,15 +147,15 @@ void decrypt()
 	fclose(encrypted);
 	fclose(encrypted_message);
 
-	RSA_do_decrypt_from_file("encrypted_iv.txt", "decrypted_iv.txt", "private_key");
+	RSA_do_decrypt_from_file("encrypted_iv.txt", "decrypted_iv.txt", privKey);
 	readFromFile("decrypted_iv.txt", decrypted_iv, 0, len);
 	remove("encrypted_iv.txt");
 	remove("decrypted_iv.txt");
 
-	RSA_do_decrypt_from_file("encrypted_message.txt", "decrypted_RSA_AES_cipher.txt", "private_key");
+	RSA_do_decrypt_from_file("encrypted_message.txt", "decrypted_RSA_AES_cipher.txt", privKey);
 	remove("encrypted_message.txt");
 	printf("creating decrypted_message.txt\n");
-	AES_do_decrypt_from_file("decrypted_RSA_AES_cipher.txt", "decrypted_message.txt", decrypted_iv);
+	AES_do_decrypt_from_file("decrypted_RSA_AES_cipher.txt", outfile, decrypted_iv);
 
 	remove("decrypted_RSA_AES_cipher.txt");
 
@@ -169,7 +167,7 @@ void decrypt()
 int main(int argc, char *argv[])
 {
 	encrypt("orig.txt", "encrypted.txt", "public_key");
-	decrypt();
+	decrypt("encrypted.txt", "encrypted_message.txt", "private_key");
 	return 0;
 }
  
