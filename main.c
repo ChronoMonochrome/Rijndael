@@ -333,6 +333,7 @@ int main(int argc, char *argv[])
                 fwrite(buf, 1, inlen, encrypted);
         }
 	fclose(encrypted);
+	fclose(RSA_AES_cipher);
 	remove("RSA_AES_cipher.txt");
 	
 	// decipher
