@@ -18,10 +18,8 @@ void encrypt(char *infile, char *outfile, char *pubKey)
 	int inlen;
 	unsigned char *encrypted_iv;
 	unsigned char *decrypted_iv;
-	unsigned char *buf;
 	encrypted_iv = (unsigned char *)malloc(BUFSIZE);
 	decrypted_iv = (unsigned char *)malloc(BUFSIZE);
-	buf = (unsigned char *)malloc(BUFSIZE);
 
 
 	srand(time(0));
@@ -42,19 +40,12 @@ void encrypt(char *infile, char *outfile, char *pubKey)
 	rsa::RSA_do_encrypt_from_file("AES_cipher.txt", "RSA_AES_cipher.txt", "public_key");
 	remove("AES_cipher.txt");
 	
-	FILE *RSA_AES_cipher = fopen("RSA_AES_cipher.txt", "r");
-	for(;;) {
-                inlen = fread(buf, 1, BUFSIZE, RSA_AES_cipher);
-                if(inlen <= 0) break;
-                fwrite(buf, 1, inlen, encrypted);
-        }
+	file::writeToFP("RSA_AES_cipher.txt", encrypted);
 	fclose(encrypted);
-	fclose(RSA_AES_cipher);
  	remove("RSA_AES_cipher.txt");
  	remove("iv.txt");
  	remove("encrypted_iv.txt");
 
-	free(buf);
 	free(decrypted_iv);
 	free(encrypted_iv);
 }

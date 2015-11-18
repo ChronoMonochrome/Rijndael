@@ -1,5 +1,7 @@
 #include <stdio.h>
+#include <cstdlib>
 #include "file.h"
+#include "misc.h"
 
 int file::readFromFile(char *infile, char *inbuf, int start, int inbuf_len)
 {
@@ -47,3 +49,19 @@ int file::writeToFile(char *outfile, unsigned char *outbuf, int outbuf_len)
 	return outlen;
 }
 
+int file::writeToFP(char *infile, FILE *foutfile)
+{
+	int inlen;
+	unsigned char *buf = (unsigned char *)malloc(BUFSIZE);
+
+	FILE *finfile = fopen(infile, "r");
+	for(;;) {
+                inlen = fread(buf, 1, BUFSIZE, finfile);
+                if(inlen <= 0) break;
+                fwrite(buf, 1, inlen, foutfile);
+        }
+
+	free(buf);
+	fclose(finfile);
+
+}
