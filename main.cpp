@@ -70,27 +70,32 @@ void RSA_do_decrypt_from_file(char *infile, char *outfile, char *privKey)
         rsa::decryptTxtFile(infile, outfile, privateKey);
 }
 
-int main(int argc, char *argv[])
+void encrypt(char *infile, char *outfile, char *pubKey)
 {
 	int i;
-	int len, len1;
-	int inlen, outlen;
-	unsigned char encrypted_iv[BUFSIZE];
-	unsigned char decrypted_iv[BUFSIZE];
-	unsigned char buf[BUFSIZE];
+	int len;
+	int inlen;
+	unsigned char *encrypted_iv;
+	unsigned char *decrypted_iv;
+	unsigned char *buf;
+	encrypted_iv = (unsigned char *)malloc(BUFSIZE);
+	decrypted_iv = (unsigned char *)malloc(BUFSIZE);
+	buf = (unsigned char *)malloc(BUFSIZE);
+
+
 	srand(time(0));
 	RAND_bytes(iv, 8);
-	
+
 	// cipher
 	writeToFile("iv.txt", iv, 8);
-	RSA_do_encrypt_from_file("iv.txt", "encrypted_iv.txt", "public_key");
+	RSA_do_encrypt_from_file("iv.txt", "encrypted_iv.txt", pubKey);
 	len = readFromFile("encrypted_iv.txt", encrypted_iv, 0, BUFSIZE);
-	FILE *encrypted = fopen("encrypted.txt", "w+");
+	FILE *encrypted = fopen(outfile, "w+");
 	fwrite(&len, sizeof(int), 1, encrypted);
 	fwrite(encrypted_iv, len, 1, encrypted);
 
 	printf("creating AES_cipher.txt\n");
-	AES_do_crypt_from_file("orig.txt", "AES_cipher.txt", iv);
+	AES_do_crypt_from_file(infile, "AES_cipher.txt", iv);
 	
 	printf("creating RSA_AES_cipher.txt\n");
 	RSA_do_encrypt_from_file("AES_cipher.txt", "RSA_AES_cipher.txt", "public_key");
@@ -107,10 +112,29 @@ int main(int argc, char *argv[])
  	remove("RSA_AES_cipher.txt");
  	remove("iv.txt");
  	remove("encrypted_iv.txt");
-	
+
+	free(buf);
+	free(encrypted_iv);
+	free(decrypted_iv);
+}
+
+void decrypt()
+{
+	int i;
+	int len, len1;
+	int inlen, outlen;
+	unsigned char *encrypted_iv;
+	unsigned char *decrypted_iv;
+	unsigned char *buf;
+	encrypted_iv = (unsigned char *)malloc(BUFSIZE);
+	decrypted_iv = (unsigned char *)malloc(BUFSIZE);
+	buf = (unsigned char *)malloc(BUFSIZE);
+//	srand(time(0));
+//	RAND_bytes(iv, 8);
+
 	// decipher
 	printf("creating iv\n");
-	encrypted = fopen("encrypted.txt", "r");
+	FILE *encrypted = fopen("encrypted.txt", "r");
 	fread(&len, sizeof(int), 1, encrypted);
 
 	fread(encrypted_iv, len, 1, encrypted);
@@ -136,9 +160,16 @@ int main(int argc, char *argv[])
 	AES_do_decrypt_from_file("decrypted_RSA_AES_cipher.txt", "decrypted_message.txt", decrypted_iv);
 
 	remove("decrypted_RSA_AES_cipher.txt");
-//*/
-//	system("pause");
-	
+
+	free(buf);
+	free(encrypted_iv);
+	free(decrypted_iv);
+}
+
+int main(int argc, char *argv[])
+{
+	encrypt("orig.txt", "encrypted.txt", "public_key");
+	decrypt();
 	return 0;
 }
  
