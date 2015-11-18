@@ -6,7 +6,7 @@ CPPFLAGS=-Wall -Werror=implicit-function-declaration -O2 -ffast-math -funsafe-lo
 CXXFLAGS=-Wall -Werror=implicit-function-declaration -O2 -ffast-math -funsafe-loop-optimizations -fno-permissive -I./include
 LDLIBS=./lib/libssl.a ./lib/libcrypto.a ./lib/libgdi32.a
 LDFLAGS=
-SRCS=main.cpp aes.cpp hugeint.cpp rsa.cpp
+SRCS=main.cpp aes.cpp hugeint.cpp rsa.cpp file.cpp
 OBJS=$(subst .cpp,.o,$(SRCS))
 
 all: myAES.exe

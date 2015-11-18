@@ -4,6 +4,19 @@
 //key length (decimal digits)
 #define KEYLENGTH 80
 
+void rsa::RSA_do_encrypt_from_file(char *infile, char *outfile, char *pubKey)
+{
+        cryptkey publicKey;
+        publicKey.loadFromFile(pubKey);
+        encryptTxtFile(infile, outfile, publicKey);
+}
+
+void rsa::RSA_do_decrypt_from_file(char *infile, char *outfile, char *privKey)
+{
+        cryptkey privateKey;
+        privateKey.loadFromFile(privKey);
+        decryptTxtFile(infile, outfile, privateKey);
+}
 
 //generating keys
 void rsa::genKeys(cryptkey &pbkey, cryptkey &prkey)

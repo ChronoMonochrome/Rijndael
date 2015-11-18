@@ -20,4 +20,6 @@ public:
   void static encryptTxtFile(const char *in, const char *out, cryptkey &key);
   //decrypt a text file
   void static decryptTxtFile(const char *in, const char*out, cryptkey &key);
+  void static RSA_do_encrypt_from_file(char *infile, char *outfile, char *pubKey);
+  void static RSA_do_decrypt_from_file(char *infile, char *outfile, char *privKey);
 };
