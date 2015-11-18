@@ -1,5 +1,5 @@
 #include <openssl/evp.h>
-#include "private/private.h"
+#include "private/misc.h"
 
 int AES_do_crypt_from_file(char *infile, char *outfile, char *iv)
 {

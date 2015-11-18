@@ -8,7 +8,10 @@
 #include <openssl/err.h>
 #include <stdio.h>
 
-#include "private/private.h"
+#include "private/misc.h"
+#include "private/aes.h"
+#include "private/rsa.h"
+
  
 
 unsigned char iv[8];
@@ -51,87 +54,6 @@ char privateKey[]="-----BEGIN RSA PRIVATE KEY-----\n"\
 "uJSUVL5+CVjKLjZEJ6Qc2WZLl94xSwL71E41H4YciVnSCQxVc4Jw\n"\
 "-----END RSA PRIVATE KEY-----\n";
 
-int RSA_do_crypt_source(char *plainText, char *publicKey, char *encrypted_plainText)
-{
-	
-	int encrypted_length = RSA_do_public_encrypt(plainText, strlen(plainText), publicKey, encrypted_plainText);
-#ifdef DEBUG
-	if (encrypted_length < 0)
-		printLastError("Public Encrypt failed ");
-		
-	printf("Encrypted length =%d\n",encrypted_length);
-#endif
-	
-	return encrypted_length;
-}
-
-int RSA_do_decrypt_source(char *plainText, char *privateKey, char *decrypted_plainText)
-{
-	
-	int decrypted_length = RSA_do_private_decrypt(plainText, strlen(plainText), privateKey, decrypted_plainText);
-#ifdef DEBUG
-	if (decrypted_length < 0)
-		printLastError("Private Decrypt failed ");
-		
-	printf("Decrypted length =%d\n", decrypted_length);
-#endif
-	
-	return decrypted_length;
-}
-
-
-int RSA_do_crypt_from_file(char *infile, char *outfile)
-{
-	
-	int outlen, inlen;
-	FILE *in, *out;
-	unsigned char inbuf[BUFSIZE], outbuf[BUFSIZE];
- 
-	in = fopen(infile, "r");
-	out = fopen(outfile, "w");
-	inlen = fread(inbuf, 1, BUFSIZE, in);
- 
-	int encrypted_length = RSA_do_public_encrypt(inbuf, inlen, publicKey, outbuf);
-	if(encrypted_length == -1)
-	{
-		printLastError("Public Encrypt failed ");
-		goto fail;
-		//exit(0);
-	}
-	printf("Encrypted length =%d\n",encrypted_length);
-	fwrite(outbuf, 1, encrypted_length, out);
-fail:
-	fclose(in);
-	fclose(out);
-
-	return encrypted_length;
-}
-
-void RSA_do_decrypt_from_file(char *infile, char *outfile)
-{
-	
-	int outlen, inlen;
-	FILE *in, *out;
-	unsigned char inbuf[BUFSIZE], outbuf[BUFSIZE];
- 
-	in = fopen(infile, "r");
-	out = fopen(outfile, "w");
-	inlen = fread(inbuf, 1, BUFSIZE, in);
- 
-	int decrypted_length = RSA_do_private_decrypt(inbuf, inlen, privateKey, outbuf);
-	if(decrypted_length == -1)
-	{
-		printLastError("Public Encrypt failed ");
-		goto fail;
-		//exit(0);
-	}
-	printf("Encrypted length =%d\n",decrypted_length);
-	fwrite(outbuf, 1, decrypted_length, out);
-fail:
-	fclose(in);
-	fclose(out);
-}
-
 int readFromFile(char *infile, char *inbuf, int start, int inbuf_len)
 {
         FILE *in = fopen(infile, "r");
@@ -160,8 +82,8 @@ int main(int argc, char *argv[])
 {
 	int i;
 	int len, len1, inlen, outlen;
-	unsigned char encrypted_iv[BUFSIZE]={};
-	unsigned char decrypted_iv[BUFSIZE]={};
+	unsigned char encrypted_iv[BUFSIZE];
+	unsigned char decrypted_iv[BUFSIZE];
 	unsigned char buf[BUFSIZE];
 	RAND_bytes(iv, 8);
 	
@@ -175,7 +97,7 @@ int main(int argc, char *argv[])
 	AES_do_crypt_from_file("orig.txt", "AES_cipher.txt", iv);
 	
 	printf("creating RSA_AES_cipher.txt\n");
-	RSA_do_crypt_from_file("AES_cipher.txt", "RSA_AES_cipher.txt");
+	RSA_do_crypt_from_file("AES_cipher.txt", "RSA_AES_cipher.txt", publicKey);
 	remove("AES_cipher.txt");
 	
 	FILE *RSA_AES_cipher = fopen("RSA_AES_cipher.txt", "r");
@@ -205,12 +127,12 @@ int main(int argc, char *argv[])
 	fclose(encrypted);
 	fclose(encrypted_message);
 
-	RSA_do_decrypt_from_file("encrypted_iv.txt", "decrypted_iv.txt");
+	RSA_do_decrypt_from_file("encrypted_iv.txt", "decrypted_iv.txt", privateKey);
 	readFromFile("decrypted_iv.txt", decrypted_iv, 0, len);
 	remove("encrypted_iv.txt");
 	remove("decrypted_iv.txt");
 
-	RSA_do_decrypt_from_file("encrypted_message.txt", "decrypted_RSA_AES_cipher.txt");
+	RSA_do_decrypt_from_file("encrypted_message.txt", "decrypted_RSA_AES_cipher.txt", privateKey);
 	remove("encrypted_message.txt");
 	printf("creating decrypted_message.txt\n");
 	AES_do_decrypt_from_file("decrypted_RSA_AES_cipher.txt", "decrypted_message.txt", decrypted_iv);
