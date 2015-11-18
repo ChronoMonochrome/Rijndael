@@ -329,7 +329,7 @@ int main(int argc, char *argv[])
 	remove("AES_cipher.txt");
 	
 	system("cat RSA_AES_cipher.txt >> encrypted.txt");
-	//remove("RSA_AES_cipher.txt");
+	remove("RSA_AES_cipher.txt");
 	len = 0;
 	
 	// decipher
@@ -355,12 +355,12 @@ int main(int argc, char *argv[])
 	remove("decrypted_iv.txt");
 
 	RSA_do_decrypt_from_file("encrypted_message.txt", "decrypted_RSA_AES_cipher.txt");
-	RSA_do_decrypt_from_file("RSA_AES_cipher.txt", "decrypted_RSA_AES_cipher1.txt");
+	remove("encrypted_message.txt");
 	printf("creating decrypted_message.txt\n");
 	AES_do_decrypt_from_file("decrypted_RSA_AES_cipher.txt", "decrypted_message.txt", decrypted_iv);
-	AES_do_decrypt_from_file("decrypted_RSA_AES_cipher1.txt", "decrypted_message1.txt", decrypted_iv);
+	//AES_do_decrypt_from_file("decrypted_RSA_AES_cipher1.txt", "decrypted_message1.txt", decrypted_iv);
 
-	//remove("decrypted_RSA_AES_cipher.txt");
+	remove("decrypted_RSA_AES_cipher.txt");
 	
 	return 0;
 }
