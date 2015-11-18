@@ -1,7 +1,7 @@
 CC=gcc
 CXX=g++
 RM=rm -f
-CFLAGS=-Wall -Werror=implicit-function-declaration
+CFLAGS=-Wall -Wno-pointer-sign -Wno-unused-variable -Werror=implicit-function-declaration
 LDFLAGS=-lssl -lcrypto
 SRCS=main.c
 OBJS=$(subst .c,.o,$(SRCS))

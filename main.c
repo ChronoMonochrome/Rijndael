@@ -280,9 +280,14 @@ fail:
 	fclose(out);
 }
 
-int readFromFile(char *infile, char *inbuf, int inbuf_len)
+int readFromFile(char *infile, char *inbuf, int start, int inbuf_len)
 {
         FILE *in = fopen(infile, "r");
+	if (start > 0) {
+		char tmp[start];
+		fread(tmp, 1, start, in);
+	}
+
 	int inlen = fread(inbuf, 1, inbuf_len, in);
 	fclose(in);
 
@@ -301,32 +306,61 @@ int writeToFile(char *outfile, char *outbuf, int outbuf_len)
 
 int main(int argc, char *argv[])
 {
-	int i, len;
+	int i;
+	int len, len1, inlen, outlen;
 	unsigned char encrypted_iv[BUFSIZE]={};
 	unsigned char decrypted_iv[BUFSIZE]={};
+	unsigned char buf[BUFSIZE];
 	RAND_bytes(iv, 8);
 	
 	// cipher
-	printf("iv: \n");
-	for(i = 0; i < 9; i++) printf("%d \n", iv[i]);
 	len = RSA_do_crypt_source(iv, publicKey, encrypted_iv);
-	writeToFile("encrypted_iv.txt", encrypted_iv, len);
+	FILE *encrypted = fopen("encrypted.txt", "w+");
+	fwrite(&len, sizeof(int), 1, encrypted);
+	fwrite(encrypted_iv, len, 1, encrypted);
+	fclose(encrypted);
+
+	//writeToFile("encrypted_iv.txt", encrypted_iv, len);
 	printf("creating AES_cipher.txt\n");
 	AES_do_crypt_from_file("orig.txt", "AES_cipher.txt", iv);
+	
 	printf("creating RSA_AES_cipher.txt\n");
 	RSA_do_crypt_from_file("AES_cipher.txt", "RSA_AES_cipher.txt");
+	remove("AES_cipher.txt");
+	
+	system("cat RSA_AES_cipher.txt >> encrypted.txt");
+	//remove("RSA_AES_cipher.txt");
+	len = 0;
 	
 	// decipher
 	printf("creating iv\n");
+	encrypted = fopen("encrypted.txt", "r");
+	fread(&len, sizeof(int), 1, encrypted);
+
+	fread(encrypted_iv, len, 1, encrypted);
+	writeToFile("encrypted_iv.txt", encrypted_iv, len);
+
+	FILE *encrypted_message = fopen("encrypted_message.txt", "w+");
+        for(;;) {
+                inlen = fread(buf, 1, BUFSIZE, encrypted);
+                if(inlen <= 0) break;
+                fwrite(buf, 1, inlen, encrypted_message);
+        }
+	fclose(encrypted);
+	fclose(encrypted_message);
+
 	RSA_do_decrypt_from_file("encrypted_iv.txt", "decrypted_iv.txt");
-	readFromFile("decrypted_iv.txt", decrypted_iv, len);
-	//RSA_do_decrypt_source(encrypted_iv, privateKey, decrypted_iv);
-	printf("decrypted_iv: \n");
-	for(i = 0; i < 9; i++) printf("%d \n", decrypted_iv[i]);
-	printf("creating decrypted_RSA_AES_cipher.txt\n");
-	RSA_do_decrypt_from_file("RSA_AES_cipher.txt", "decrypted_RSA_AES_cipher.txt");
-	printf("creating decrypted.txt\n");
-	AES_do_decrypt_from_file("decrypted_RSA_AES_cipher.txt", "decrypted.txt", iv);
+	readFromFile("decrypted_iv.txt", decrypted_iv, 0, len);
+	remove("encrypted_iv.txt");
+	remove("decrypted_iv.txt");
+
+	RSA_do_decrypt_from_file("encrypted_message.txt", "decrypted_RSA_AES_cipher.txt");
+	RSA_do_decrypt_from_file("RSA_AES_cipher.txt", "decrypted_RSA_AES_cipher1.txt");
+	printf("creating decrypted_message.txt\n");
+	AES_do_decrypt_from_file("decrypted_RSA_AES_cipher.txt", "decrypted_message.txt", decrypted_iv);
+	AES_do_decrypt_from_file("decrypted_RSA_AES_cipher1.txt", "decrypted_message1.txt", decrypted_iv);
+
+	//remove("decrypted_RSA_AES_cipher.txt");
 	
 	return 0;
 }
