@@ -1,23 +1,24 @@
 CC=i586-mingw32msvc-gcc
 #CC=gcc
-CXX=g++
+CXX=i586-mingw32msvc-g++
 RM=rm -f
-CFLAGS=-Wall -Werror=implicit-function-declaration -I./include
+CPPFLAGS=-Wall -Werror=implicit-function-declaration -O2 -ffast-math -funsafe-loop-optimizations -fno-permissive -I./include
+CXXFLAGS=-Wall -Werror=implicit-function-declaration -O2 -ffast-math -funsafe-loop-optimizations -fno-permissive -I./include
 LDLIBS=./lib/libssl.a ./lib/libcrypto.a ./lib/libgdi32.a
 LDFLAGS=
-SRCS=main.c rsa.c aes.c
-OBJS=$(subst .c,.o,$(SRCS))
+SRCS=main.cpp aes.cpp hugeint.cpp rsa.cpp
+OBJS=$(subst .cpp,.o,$(SRCS))
 
 all: myAES.exe
 
 myAES.exe: $(OBJS)
-	$(CC) -o myAES.exe $(OBJS) $(LDFLAGS) $(LDLIBS) 
+	$(CXX) -o myAES.exe $(CPPFLAGS) $(OBJS) $(LDFLAGS) $(LDLIBS) 
 
 depend: .depend
 
 .depend: $(SRCS)
 	rm -f ./.depend
-	$(CC) $(CFLAGS) -MM $^>>./.depend;
+	$(CXX) $(CFLAGS) -MM $^>>./.depend;
 
 objclean:
 	$(RM) $(OBJS)

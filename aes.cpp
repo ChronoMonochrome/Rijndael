@@ -1,7 +1,7 @@
 #include <openssl/evp.h>
 #include "private/misc.h"
 
-int AES_do_crypt_from_file(char *infile, char *outfile, char *iv)
+int AES_do_crypt_from_file(char *infile, char *outfile, unsigned char *iv)
 {
 	int outlen, inlen;
 	FILE *in, *out;
@@ -38,7 +38,7 @@ int AES_do_crypt_from_file(char *infile, char *outfile, char *iv)
 	return 1;
 }
 
-int AES_do_decrypt_from_file(char *infile, char *outfile, char *iv)
+int AES_do_decrypt_from_file(char *infile, char *outfile, unsigned char *iv)
 {
 	int outlen, inlen;
 	FILE *in, *out;
