@@ -138,6 +138,8 @@ int main(int argc, char *argv[])
 	AES_do_decrypt_from_file("decrypted_RSA_AES_cipher.txt", "decrypted_message.txt", decrypted_iv);
 
 	remove("decrypted_RSA_AES_cipher.txt");
+
+	system("pause");
 	
 	return 0;
 }
