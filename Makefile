@@ -9,10 +9,10 @@ LDFLAGS=
 SRCS=main.cpp aes.cpp hugeint.cpp rsa.cpp file.cpp
 OBJS=$(subst .cpp,.o,$(SRCS))
 
-all: myAES.exe
+all: crypto_hybrid.exe
 
-myAES.exe: $(OBJS)
-	$(CXX) -o myAES.exe $(CPPFLAGS) $(OBJS) $(LDFLAGS) $(LDLIBS) 
+crypto_hybrid.exe: $(OBJS)
+	$(CXX) -o crypto_hybrid.exe $(CPPFLAGS) $(OBJS) $(LDFLAGS) $(LDLIBS) 
 
 depend: .depend
 
@@ -24,6 +24,6 @@ objclean:
 	$(RM) $(OBJS)
 
 clean: objclean
-	$(RM) .depend *.o myAES decrypted.txt encrypted.txt
+	$(RM) .depend *.o crypto_hybrid.exe decrypted.txt encrypted.txt
 
 include .depend
