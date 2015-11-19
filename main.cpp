@@ -23,24 +23,25 @@ void encrypt(char *infile, char *outfile, char *pubKey)
 
 
 	srand(time(0));
+	printf("Generating the IV\n");
 	RAND_bytes(iv, 8);
 
-	// cipher
 	file::writeToFile("iv.txt", iv, 8);
+	printf("Encrypting IV\n");
 	rsa::RSA_do_encrypt_from_file("iv.txt", "encrypted_iv.txt", pubKey);
 	len = file::readFromFile("encrypted_iv.txt", encrypted_iv, 0, BUFSIZE);
 	FILE *encrypted = fopen(outfile, "w+");
 	fwrite(&len, sizeof(int), 1, encrypted);
 	fwrite(encrypted_iv, len, 1, encrypted);
 
-	printf("creating AES_cipher.txt\n");
+	printf("Encrypting the source\n");
 	aes::AES_do_crypt_from_file(infile, "AES_cipher.txt", iv);
 	
-	printf("creating RSA_AES_cipher.txt\n");
 	rsa::RSA_do_encrypt_from_file("AES_cipher.txt", "RSA_AES_cipher.txt", "public_key");
 	remove("AES_cipher.txt");
 	
 	file::writeToFP("RSA_AES_cipher.txt", encrypted);
+	printf("%s was successfully encrypted and written to %s\n", infile, outfile);
 	fclose(encrypted);
  	remove("RSA_AES_cipher.txt");
  	remove("iv.txt");
@@ -62,14 +63,14 @@ void decrypt(char *infile, char *outfile, char *privKey)
 	decrypted_iv = (unsigned char *)malloc(BUFSIZE);
 	buf = (unsigned char *)malloc(BUFSIZE);
 
-	// decipher
-	printf("creating iv\n");
+	printf("Decrypting the IV\n");
 	FILE *encrypted = fopen(infile, "r");
 	fread(&len, sizeof(int), 1, encrypted);
 
 	fread(encrypted_iv, len, 1, encrypted);
 	file::writeToFile("encrypted_iv.txt", encrypted_iv, len);
 
+	printf("Decrypting the source\n");
 	FILE *encrypted_message = fopen("encrypted_message.txt", "w+");
         for(;;) {
                 inlen = fread(buf, 1, BUFSIZE, encrypted);
@@ -86,8 +87,8 @@ void decrypt(char *infile, char *outfile, char *privKey)
 
 	rsa::RSA_do_decrypt_from_file("encrypted_message.txt", "decrypted_RSA_AES_cipher.txt", privKey);
 	remove("encrypted_message.txt");
-	printf("creating %s\n", outfile);
 	aes::AES_do_decrypt_from_file("decrypted_RSA_AES_cipher.txt", outfile, decrypted_iv);
+	printf("%s was successfully decrypted and written to %s\n", infile, outfile);
 
 	remove("decrypted_RSA_AES_cipher.txt");
 
