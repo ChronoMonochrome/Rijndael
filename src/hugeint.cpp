@@ -1227,8 +1227,11 @@ void hugeint::random(unsigned int length)
 {
   if (length <= maxSize)
   { 
-    for (unsigned int i = 0; i < length; i++)
-      (i != length-1)?(number[i] = rand()%10):(number[i] = rand()%9+1);   
+    
+    number[0] = 1;
+    for (unsigned int i = 1; i < length - 1; i++)
+      number[i] = rand()%10;
+    number[length-1] = rand()%9+1;   
 
 
     currentSize = length;

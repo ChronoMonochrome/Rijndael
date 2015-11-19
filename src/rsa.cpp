@@ -28,12 +28,34 @@ void rsa::genKeys(cryptkey &pbkey, cryptkey &prkey)
 
 
   //getting 2 prime numbers
-  while (!p.prime())
-    p.random(KEYLENGTH/2);
+  p.random(KEYLENGTH/2);
+  int i = 0;
+  int prime_nums[] = {1,3,7,9};
+  if (!p.prime())
+	p = p - (p % 10);
 
+  while (!p.prime()) {
+	p = p + prime_nums[i];
+	i = i + 1;
+	if (i == 4){
+		p = p + 10;
+		i = 0;
+	}
+  }
 
-  while (!q.prime())
-    q.random(KEYLENGTH/2);
+  i = 0;
+
+  if (!q.prime())
+	q = q - (q % 10);
+
+  while (!q.prime()) {
+	q = q + prime_nums[i];
+	i = i + 1;
+	if (i == 4){
+		q = q + 10;
+		i = 0;
+	}
+  }
 
 
   n = p*q;
