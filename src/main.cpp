@@ -23,8 +23,10 @@ void encrypt(char *infile, char *outfile, char *pubKey)
 	int i;
 	int len;
 	int inlen;
+	unsigned long *AES_key;
 	unsigned char *encrypted_iv;
 	unsigned char *decrypted_iv;
+	AES_key = (unsigned long *) calloc(4, sizeof(unsigned long *));
 	encrypted_iv = (unsigned char *)malloc(BUFSIZE);
 	decrypted_iv = (unsigned char *)malloc(BUFSIZE);
 
@@ -51,8 +53,12 @@ void encrypt(char *infile, char *outfile, char *pubKey)
 	fwrite(encrypted_iv, len, 1, encrypted);
 
 	printf("Encrypting the source\n");
-	aes::AES_do_crypt_from_file(infile, "AES_cipher.txt", sh);
-	//encode("tmp_AES_cipher.txt", "AES_cipher.txt");
+	AES_key[0] = sh[0] << 24 + sh[1] << 16 + sh[2] << 8 + sh[3];
+	AES_key[1] = sh[4] << 24 + sh[5] << 16 + sh[6] << 8 + sh[7];
+	AES_key[2] = sh[8] << 24 + sh[9] << 16 + sh[10] << 8 + sh[11];
+	AES_key[3] = sh[12] << 24 + sh[13] << 16 + sh[14] << 8 + sh[15];
+	
+	aes::AES_do_crypt_from_file(infile, "AES_cipher.txt", AES_key);
 	
 	rsa::RSA_do_encrypt_from_file("AES_cipher.txt", "RSA_AES_cipher.txt", "public_key");
 	//remove("AES_cipher.txt");
@@ -66,6 +72,7 @@ void encrypt(char *infile, char *outfile, char *pubKey)
 
 	free(decrypted_iv);
 	free(encrypted_iv);
+	free(AES_key);
 }
 
 void decrypt(char *infile, char *outfile, char *privKey)
@@ -73,11 +80,13 @@ void decrypt(char *infile, char *outfile, char *privKey)
 	int i;
 	int len, len1;
 	int inlen, outlen;
+	unsigned long *AES_key;
 	unsigned char *encrypted_iv;
 	unsigned char *decrypted_iv;
 	unsigned char *buf;
 	encrypted_iv = (unsigned char *)malloc(BUFSIZE);
 	decrypted_iv = (unsigned char *)malloc(BUFSIZE);
+	AES_key = (unsigned long *) calloc(4, sizeof(unsigned long *));
 	buf = (unsigned char *)malloc(BUFSIZE);
 
 	printf("Decrypting the IV\n");
@@ -105,13 +114,17 @@ void decrypt(char *infile, char *outfile, char *privKey)
     	}
    	printf("\n");
 
+	AES_key[0] = decrypted_iv[0] << 24 + decrypted_iv[1] << 16 + decrypted_iv[2] << 8 + decrypted_iv[3];
+	AES_key[1] = decrypted_iv[4] << 24 + decrypted_iv[5] << 16 + decrypted_iv[6] << 8 + decrypted_iv[7];
+	AES_key[2] = decrypted_iv[8] << 24 + decrypted_iv[9] << 16 + decrypted_iv[10] << 8 + decrypted_iv[11];
+	AES_key[3] = decrypted_iv[12] << 24 + decrypted_iv[13] << 16 + decrypted_iv[14] << 8 + decrypted_iv[15];
+
 	//remove("encrypted_iv.txt");
 	//remove("decrypted_iv.txt");
 
 	rsa::RSA_do_decrypt_from_file("encrypted_message.txt", "decrypted_RSA_AES_cipher.txt", privKey);
 	//remove("encrypted_message.txt");
-	//decode("tmp_decrypted_RSA_AES_cipher.txt", "decrypted_RSA_AES_cipher.txt");
-	aes::AES_do_decrypt_from_file("decrypted_RSA_AES_cipher.txt", outfile, decrypted_iv);
+	aes::AES_do_decrypt_from_file("decrypted_RSA_AES_cipher.txt", outfile, AES_key);
 	printf("%s was successfully decrypted and written to %s\n", infile, outfile);
 
 	//remove("decrypted_RSA_AES_cipher.txt");
@@ -119,6 +132,7 @@ void decrypt(char *infile, char *outfile, char *privKey)
 	free(buf);
 	free(encrypted_iv);
 	free(decrypted_iv);
+	free(AES_key);
 }
 
 int main(int argc, char *argv[])
