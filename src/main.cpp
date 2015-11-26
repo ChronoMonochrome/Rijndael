@@ -1,7 +1,9 @@
 #include <openssl/evp.h>
 #include <openssl/rand.h>
+#include <openssl/sha.h>
 #include <stdio.h>
 #include <ctime>
+#include <string.h>
 
 #include "misc.h"
 #include "aes.h"
@@ -9,7 +11,7 @@
 #include "file.h"
  
 
-unsigned char iv[8];
+unsigned char iv[32], sh[32];
 
 void encrypt(char *infile, char *outfile, char *pubKey)
 {
@@ -25,8 +27,14 @@ void encrypt(char *infile, char *outfile, char *pubKey)
 	srand(time(0));
 	printf("Generating the IV\n");
 	RAND_bytes(iv, 8);
+	SHA256(iv, 8, sh);
 
-	file::writeToFile("iv.txt", iv, 8);
+	for (i = 0; i < 32; i++) {
+		printf("%02x ", sh[i]);
+	}
+	printf("\n");
+
+	file::writeToFile("iv.txt", sh, 32);
 	printf("Encrypting IV\n");
 	rsa::RSA_do_encrypt_from_file("iv.txt", "encrypted_iv.txt", pubKey);
 	len = file::readFromFile("encrypted_iv.txt", encrypted_iv, 0, BUFSIZE);
@@ -35,17 +43,17 @@ void encrypt(char *infile, char *outfile, char *pubKey)
 	fwrite(encrypted_iv, len, 1, encrypted);
 
 	printf("Encrypting the source\n");
-	aes::AES_do_crypt_from_file(infile, "AES_cipher.txt", iv);
+	aes::AES_do_crypt_from_file(infile, "AES_cipher.txt", sh);
 	
 	rsa::RSA_do_encrypt_from_file("AES_cipher.txt", "RSA_AES_cipher.txt", "public_key");
-	remove("AES_cipher.txt");
+	//remove("AES_cipher.txt");
 	
 	file::writeToFP("RSA_AES_cipher.txt", encrypted);
 	printf("%s was successfully encrypted and written to %s\n", infile, outfile);
 	fclose(encrypted);
- 	remove("RSA_AES_cipher.txt");
- 	remove("iv.txt");
- 	remove("encrypted_iv.txt");
+ 	//remove("RSA_AES_cipher.txt");
+ 	//remove("iv.txt");
+ 	//remove("encrypted_iv.txt");
 
 	free(decrypted_iv);
 	free(encrypted_iv);
@@ -82,15 +90,20 @@ void decrypt(char *infile, char *outfile, char *privKey)
 
 	rsa::RSA_do_decrypt_from_file("encrypted_iv.txt", "decrypted_iv.txt", privKey);
 	file::readFromFile("decrypted_iv.txt", decrypted_iv, 0, len);
-	remove("encrypted_iv.txt");
-	remove("decrypted_iv.txt");
+    	for (i = 0; i < 32; i++) {
+        	printf("%02x ", decrypted_iv[i]);
+    	}
+   	printf("\n");
+
+	//remove("encrypted_iv.txt");
+	//remove("decrypted_iv.txt");
 
 	rsa::RSA_do_decrypt_from_file("encrypted_message.txt", "decrypted_RSA_AES_cipher.txt", privKey);
 	remove("encrypted_message.txt");
 	aes::AES_do_decrypt_from_file("decrypted_RSA_AES_cipher.txt", outfile, decrypted_iv);
 	printf("%s was successfully decrypted and written to %s\n", infile, outfile);
 
-	remove("decrypted_RSA_AES_cipher.txt");
+	//remove("decrypted_RSA_AES_cipher.txt");
 
 	free(buf);
 	free(encrypted_iv);
@@ -219,7 +232,7 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-  system("pause");
+ // system("pause");
 
   return 0;
 }
