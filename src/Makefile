@@ -6,8 +6,11 @@ CPPFLAGS=-Wall -Werror=implicit-function-declaration -O2 -ffast-math -funsafe-lo
 CXXFLAGS=-Wall -Werror=implicit-function-declaration -O2 -ffast-math -funsafe-loop-optimizations -fno-permissive -I./include
 LDLIBS=./lib/libssl.a ./lib/libcrypto.a ./lib/libgdi32.a
 LDFLAGS=
-SRCS=main.cpp aes.cpp hugeint.cpp rsa.cpp file.cpp
+SRCS=main.cpp aes.cpp hugeint.cpp rsa.cpp file.cpp base64.cpp
 OBJS=$(subst .cpp,.o,$(SRCS))
+
+BUFFERSIZE = 16777216
+CPPLAGS += -DBUFFERSIZE=$(BUFFERSIZE)
 
 all: crypto_hybrid.exe
 

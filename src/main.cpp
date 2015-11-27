@@ -11,7 +11,11 @@
 #include "file.h"
  
 
-unsigned char iv[32], sh[32];
+unsigned char iv[32];
+unsigned char sh[32] = {0x17, 0xd8, 0x5b, 0x85, 0xa8, 0x49, 0x89, 0xbf, 0x1a, 0x06, 0xe4, 0x19, 0xf7, 0x09, 0xd8, 0x57, 0x87, 0xb3, 0x48, 0xca, 0xfe, 0x4b, 0x8f, 0x1a, 0xeb, 0x30, 0x71, 0x59, 0x30, 0x18, 0xb2, 0x48};
+
+void encode(const char *infile, const char *outfile);
+void decode(const char *infile, const char *outfile);
 
 void encrypt(char *infile, char *outfile, char *pubKey)
 {
@@ -27,14 +31,18 @@ void encrypt(char *infile, char *outfile, char *pubKey)
 	srand(time(0));
 	printf("Generating the IV\n");
 	RAND_bytes(iv, 8);
+/*
 	SHA256(iv, 8, sh);
 
 	for (i = 0; i < 32; i++) {
 		printf("%02x ", sh[i]);
 	}
 	printf("\n");
+*/
 
-	file::writeToFile("iv.txt", sh, 32);
+	file::writeToFile("tmp_iv.txt", sh, 32);
+	encode("tmp_iv.txt", "iv.txt");
+	
 	printf("Encrypting IV\n");
 	rsa::RSA_do_encrypt_from_file("iv.txt", "encrypted_iv.txt", pubKey);
 	len = file::readFromFile("encrypted_iv.txt", encrypted_iv, 0, BUFSIZE);
@@ -76,7 +84,6 @@ void decrypt(char *infile, char *outfile, char *privKey)
 	fread(&len, sizeof(int), 1, encrypted);
 
 	fread(encrypted_iv, len, 1, encrypted);
-	file::writeToFile("encrypted_iv.txt", encrypted_iv, len);
 
 	printf("Decrypting the source\n");
 	FILE *encrypted_message = fopen("encrypted_message.txt", "w+");
@@ -88,7 +95,9 @@ void decrypt(char *infile, char *outfile, char *privKey)
 	fclose(encrypted);
 	fclose(encrypted_message);
 
-	rsa::RSA_do_decrypt_from_file("encrypted_iv.txt", "decrypted_iv.txt", privKey);
+	rsa::RSA_do_decrypt_from_file("encrypted_iv.txt", "tmp_decrypted_iv.txt", privKey);
+	decode("tmp_decrypted_iv.txt", "decrypted_iv.txt");
+
 	file::readFromFile("decrypted_iv.txt", decrypted_iv, 0, len);
     	for (i = 0; i < 32; i++) {
         	printf("%02x ", decrypted_iv[i]);
