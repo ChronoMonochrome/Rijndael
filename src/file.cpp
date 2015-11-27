@@ -5,7 +5,7 @@
 
 int file::readFromFile(char *infile, char *inbuf, int start, int inbuf_len)
 {
-        FILE *in = fopen(infile, "rb");
+        FILE *in = fopen(infile, "r");
 	if (start > 0) {
 		char tmp[start];
 		fread(tmp, 1, start, in);
@@ -19,7 +19,7 @@ int file::readFromFile(char *infile, char *inbuf, int start, int inbuf_len)
 
 int file::readFromFile(char *infile, unsigned char *inbuf, int start, int inbuf_len)
 {
-        FILE *in = fopen(infile, "rb");
+        FILE *in = fopen(infile, "r");
 	if (start > 0) {
 		char tmp[start];
 		fread(tmp, 1, start, in);
@@ -33,7 +33,7 @@ int file::readFromFile(char *infile, unsigned char *inbuf, int start, int inbuf_
 
 int file::writeToFile(char *outfile, char *outbuf, int outbuf_len)
 {
-        FILE *out = fopen(outfile, "wb");
+        FILE *out = fopen(outfile, "w");
 	int outlen = fwrite(outbuf, 1, outbuf_len, out);
 	fclose(out);
 
@@ -42,7 +42,7 @@ int file::writeToFile(char *outfile, char *outbuf, int outbuf_len)
 
 int file::writeToFile(char *outfile, unsigned char *outbuf, int outbuf_len)
 {
-        FILE *out = fopen(outfile, "wb");
+        FILE *out = fopen(outfile, "w");
 	int outlen = fwrite(outbuf, 1, outbuf_len, out);
 	fclose(out);
 
@@ -54,7 +54,7 @@ int file::writeToFP(char *infile, FILE *foutfile)
 	int inlen;
 	unsigned char *buf = (unsigned char *)malloc(BUFSIZE);
 
-	FILE *finfile = fopen(infile, "rb");
+	FILE *finfile = fopen(infile, "r");
 	for(;;) {
                 inlen = fread(buf, 1, BUFSIZE, finfile);
                 if(inlen <= 0) break;
