@@ -47,8 +47,8 @@ int aes::AES_do_decrypt_from_file(char *infile, char *outfile, unsigned char *iv
 	EVP_CIPHER_CTX ctx;
 	const EVP_CIPHER * cipher;
 
-	in = fopen(infile, "r");
-	out = fopen(outfile, "w");
+	in = fopen(infile, "rb");
+	out = fopen(outfile, "wb");
 
 	/* Обнуляем структуру контекста */
 	EVP_CIPHER_CTX_init(&ctx);

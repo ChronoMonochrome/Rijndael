@@ -19,7 +19,7 @@ int file::readFromFile(char *infile, char *inbuf, int start, int inbuf_len)
 
 int file::readFromFile(char *infile, unsigned char *inbuf, int start, int inbuf_len)
 {
-        FILE *in = fopen(infile, "r");
+        FILE *in = fopen(infile, "rb");
 	if (start > 0) {
 		char tmp[start];
 		fread(tmp, 1, start, in);
@@ -54,7 +54,7 @@ int file::writeToFP(char *infile, FILE *foutfile)
 	int inlen;
 	unsigned char *buf = (unsigned char *)malloc(BUFSIZE);
 
-	FILE *finfile = fopen(infile, "r");
+	FILE *finfile = fopen(infile, "rb");
 	for(;;) {
                 inlen = fread(buf, 1, BUFSIZE, finfile);
                 if(inlen <= 0) break;

@@ -12,7 +12,8 @@
  
 
 unsigned char iv[32];
-unsigned char sh[32] = {0x17, 0xd8, 0x5b, 0x85, 0xa8, 0x49, 0x89, 0xbf, 0x1a, 0x06, 0xe4, 0x19, 0xf7, 0x09, 0xd8, 0x57, 0x87, 0xb3, 0x48, 0xca, 0xfe, 0x4b, 0x8f, 0x1a, 0xeb, 0x30, 0x71, 0x59, 0x30, 0x18, 0xb2, 0x48};
+unsigned char sh[32];
+//unsigned char sh[32] = {0x17, 0x18, 0x5b, 0x85, 0x18, 0x49, 0x19, 0x1f, 0x1a, 0x06, 0x14, 0x19, 0x17, 0x09, 0x18, 0x57, 0x17, 0x13, 0x48, 0x1a, 0x1e, 0x4b, 0x1f, 0x1a, 0x1b, 0x30, 0x71, 0x59, 0x30, 0x18, 0x12, 0x48};
 
 void encode(const char *infile, const char *outfile);
 void decode(const char *infile, const char *outfile);
@@ -31,14 +32,13 @@ void encrypt(char *infile, char *outfile, char *pubKey)
 	srand(time(0));
 	printf("Generating the IV\n");
 	RAND_bytes(iv, 8);
-/*
+
 	SHA256(iv, 8, sh);
 
 	for (i = 0; i < 32; i++) {
 		printf("%02x ", sh[i]);
 	}
 	printf("\n");
-*/
 
 	file::writeToFile("tmp_iv.txt", sh, 32);
 	encode("tmp_iv.txt", "iv.txt");
@@ -46,12 +46,13 @@ void encrypt(char *infile, char *outfile, char *pubKey)
 	printf("Encrypting IV\n");
 	rsa::RSA_do_encrypt_from_file("iv.txt", "encrypted_iv.txt", pubKey);
 	len = file::readFromFile("encrypted_iv.txt", encrypted_iv, 0, BUFSIZE);
-	FILE *encrypted = fopen(outfile, "w+");
+	FILE *encrypted = fopen(outfile, "wb+");
 	fwrite(&len, sizeof(int), 1, encrypted);
 	fwrite(encrypted_iv, len, 1, encrypted);
 
 	printf("Encrypting the source\n");
-	aes::AES_do_crypt_from_file(infile, "AES_cipher.txt", sh);
+	aes::AES_do_crypt_from_file(infile, "tmp_AES_cipher.txt", sh);
+	encode("tmp_AES_cipher.txt", "AES_cipher.txt");
 	
 	rsa::RSA_do_encrypt_from_file("AES_cipher.txt", "RSA_AES_cipher.txt", "public_key");
 	//remove("AES_cipher.txt");
@@ -80,13 +81,13 @@ void decrypt(char *infile, char *outfile, char *privKey)
 	buf = (unsigned char *)malloc(BUFSIZE);
 
 	printf("Decrypting the IV\n");
-	FILE *encrypted = fopen(infile, "r");
+	FILE *encrypted = fopen(infile, "rb");
 	fread(&len, sizeof(int), 1, encrypted);
 
 	fread(encrypted_iv, len, 1, encrypted);
 
 	printf("Decrypting the source\n");
-	FILE *encrypted_message = fopen("encrypted_message.txt", "w+");
+	FILE *encrypted_message = fopen("encrypted_message.txt", "wb+");
         for(;;) {
                 inlen = fread(buf, 1, BUFSIZE, encrypted);
                 if(inlen <= 0) break;
@@ -107,8 +108,9 @@ void decrypt(char *infile, char *outfile, char *privKey)
 	//remove("encrypted_iv.txt");
 	//remove("decrypted_iv.txt");
 
-	rsa::RSA_do_decrypt_from_file("encrypted_message.txt", "decrypted_RSA_AES_cipher.txt", privKey);
-	remove("encrypted_message.txt");
+	rsa::RSA_do_decrypt_from_file("encrypted_message.txt", "tmp_decrypted_RSA_AES_cipher.txt", privKey);
+	//remove("encrypted_message.txt");
+	decode("tmp_decrypted_RSA_AES_cipher.txt", "decrypted_RSA_AES_cipher.txt");
 	aes::AES_do_decrypt_from_file("decrypted_RSA_AES_cipher.txt", outfile, decrypted_iv);
 	printf("%s was successfully decrypted and written to %s\n", infile, outfile);
 
