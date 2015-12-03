@@ -22,7 +22,9 @@ using namespace std;
 
 class hugeint
 {       
+public:
   short *number;
+private:
   unsigned  int currentSize;
   unsigned int maxSize;
   //if true then number is positive
