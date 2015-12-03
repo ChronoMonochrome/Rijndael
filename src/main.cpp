@@ -51,8 +51,8 @@ void encrypt(char *infile, char *outfile, char *pubKey)
 	fwrite(encrypted_iv, len, 1, encrypted);
 
 	printf("Encrypting the source\n");
-	aes::AES_do_crypt_from_file(infile, "tmp_AES_cipher.txt", sh);
-	encode("tmp_AES_cipher.txt", "AES_cipher.txt");
+	aes::AES_do_crypt_from_file(infile, "AES_cipher.txt", sh);
+	//encode("tmp_AES_cipher.txt", "AES_cipher.txt");
 	
 	rsa::RSA_do_encrypt_from_file("AES_cipher.txt", "RSA_AES_cipher.txt", "public_key");
 	//remove("AES_cipher.txt");
@@ -108,9 +108,9 @@ void decrypt(char *infile, char *outfile, char *privKey)
 	//remove("encrypted_iv.txt");
 	//remove("decrypted_iv.txt");
 
-	rsa::RSA_do_decrypt_from_file("encrypted_message.txt", "tmp_decrypted_RSA_AES_cipher.txt", privKey);
+	rsa::RSA_do_decrypt_from_file("encrypted_message.txt", "decrypted_RSA_AES_cipher.txt", privKey);
 	//remove("encrypted_message.txt");
-	decode("tmp_decrypted_RSA_AES_cipher.txt", "decrypted_RSA_AES_cipher.txt");
+	//decode("tmp_decrypted_RSA_AES_cipher.txt", "decrypted_RSA_AES_cipher.txt");
 	aes::AES_do_decrypt_from_file("decrypted_RSA_AES_cipher.txt", outfile, decrypted_iv);
 	printf("%s was successfully decrypted and written to %s\n", infile, outfile);
 
