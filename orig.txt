@@ -1,1 +1,12 @@
-Just a test example.
+class file
+{
+public:
+int static readFromFile(char *infile, char *inbuf, int start, int inbuf_len);
+int static readFromFile(char *infile, unsigned char *inbuf, int start, int inbuf_len);
+}
+class file
+{
+public:
+int static readFromFile(char *infile, char *inbuf, int start, int inbuf_len);
+int static readFromFile(char *infile, unsigned char *inbuf, int start, int inbuf_len);
+}

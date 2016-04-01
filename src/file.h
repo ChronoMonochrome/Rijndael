@@ -1,3 +1,7 @@
+#ifndef FILE_H
+#define FILE_H
+
+
 using namespace std;
 
 
@@ -10,3 +14,5 @@ int static writeToFile(char *outfile, char *outbuf, int outbuf_len);
 int static writeToFile(char *outfile, unsigned char *outbuf, int outbuf_len);
 int static writeToFP(char *infile, FILE *foutfile);
 };
+
+#endif

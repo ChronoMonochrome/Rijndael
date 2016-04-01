@@ -1,3 +1,6 @@
+#ifndef HUGEINT_H
+#define HUGEINT_H
+
 /* 
 * hugeint - the class to work with a big integers.
 * Copyright(C) 2011 Alexey Dolgopolov.  
@@ -101,3 +104,5 @@ public:
   friend ostream& operator<<(ostream &out, const hugeint &obj);
   friend istream& operator>>(istream &in, hugeint &obj);
 };
+
+#endif /* HUGEINT_H */

@@ -25,22 +25,24 @@ void rsa::genKeys(cryptkey &pbkey, cryptkey &prkey)
   hugeint q(KEYLENGTH/2);
   hugeint d(KEYLENGTH-3);
   hugeint n, eiler, diviser,e;
-  int mod;
+  hugeint mod;
   int prime_numbers[4] = {1, 3, 7, 9};
 
   //getting 2 prime numbers
   do {
 	p.random(KEYLENGTH/2);
-	mod = (p % 10).number[0];
+	mod = p % 10;
+	//mod = p.number[KEYLENGTH/2 - 1];
 	p -= mod;
-	p += prime_numbers[mod % 4];
+	p += prime_numbers[mod.number[0] % 4];
   } while (!p.prime());
 
   do {
 	q.random(KEYLENGTH/2);
-	mod = (q % 10).number[0];
+	mod = q % 10;
+	//mod = q.number[KEYLENGTH/2 - 1];
 	q -= mod;
-	q += prime_numbers[mod % 4];
+	q += prime_numbers[mod.number[0] % 4];
   } while (!q.prime());
 
 

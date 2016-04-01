@@ -4,16 +4,6 @@
 CXX=./cxx.sh
 #CXX=g++
 RM=rm -f
-
-GRAPHITE_FLAGS= \
-    -floop-flatten \
-    -floop-parallelize-all \
-    -ftree-loop-linear \
-    -floop-interchange \
-    -floop-strip-mine \
-    -floop-block
-
-
 LTO_FLAGS=-flto=jobserver \
 	-fno-fat-lto-objects \
 	-fuse-linker-plugin \
@@ -21,11 +11,9 @@ LTO_FLAGS=-flto=jobserver \
 	-funit-at-a-time \
 	-flto-report
 
-
-
 CPPFLAGS=-Wall \
 	-Werror=implicit-function-declaration \
-	-I./include \
+	-march=native \
 	-O2 \
 	-ffast-math \
 	-funsafe-loop-optimizations \
@@ -34,16 +22,17 @@ CPPFLAGS=-Wall \
 	-frename-registers \
         -fomit-frame-pointer \
 	-pipe \
-        -std=gnu++14
+	-mhard-float \
+        -std=gnu++14 \
+	-I./include
 
-#	-march=native \
-TEST= \
 
-LDLIBS=./lib/libssl.a ./lib/libcrypto.a ./lib/libgdi32.a
-LDFLAGS=-static 
+#LDLIBS=./lib/libssl.a ./lib/libcrypto.a ./lib/libgdi32.a
+LDFLAGS=-static
 #-Wl,-flto
 #-lssl -lcrypto  -Wl,-flto
-SRCS=main.cpp aes.cpp hugeint.cpp rsa.cpp file.cpp base64.cpp
+SRCS=main.cpp
+# aes.cpp hugeint.cpp rsa.cpp file.cpp base64.cpp
 OBJS=$(subst .cpp,.o,$(SRCS))
 
 BUFFERSIZE = 16777216

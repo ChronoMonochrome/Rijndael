@@ -13,6 +13,7 @@
 
 #define ij2n(i,j)    4*(j)+i
 #define file_len(x) (unsigned long)x
+//x.__pos
 #define pack(b)        *(WORD*)&*b
 
 #define BYTE unsigned char
@@ -301,7 +302,7 @@ void InvCipher(WORD block[Nb], WORD key[Nb*(Nr+1)])
     log_it("After AddRoundKey\n", block);
 }
 
-int aes::AES_do_crypt_from_file(char *infile, char *outfile, unsigned long *CifKey)
+int aes::AES_do_encrypt_from_file(char *infile, char *outfile, unsigned long *CifKey)
 {
 	BYTE* in = new BYTE[4*Nb];
         printf("Encoding...\n");
