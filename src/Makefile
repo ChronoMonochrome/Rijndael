@@ -1,8 +1,17 @@
 #CC=i586-mingw32msvc-gcc
 #CC=gcc#
 #CXX=i586-mingw32msvc-g++#
+
+UNIX=1
+
+ifeq ($(UNIX), 1)
+CXX=g++
+EXT=
+else
 CXX=./cxx.sh
-#CXX=g++
+EXT=.exe
+endif
+
 RM=rm -f
 
 GRAPHITE_FLAGS= \
@@ -36,11 +45,16 @@ CPPFLAGS=-Wall \
 	-pipe \
         -std=gnu++14
 
-#	-march=native \
-TEST= \
 
-LDLIBS=./lib/libssl.a ./lib/libcrypto.a ./lib/libgdi32.a
+ifneq ($(UNIX), 1)
+CPPFLAGS+=-DWIN -march=atom
 LDFLAGS=-static 
+LDLIBS=./lib/libssl.a ./lib/libcrypto.a ./lib/libgdi32.a
+else
+CPPFLAGS+=-march=sandybridge
+LDLIBS=-lssl -lcrypto
+endif
+
 #-Wl,-flto
 #-lssl -lcrypto  -Wl,-flto
 SRCS=main.cpp aes.cpp hugeint.cpp rsa.cpp file.cpp base64.cpp
@@ -49,10 +63,10 @@ OBJS=$(subst .cpp,.o,$(SRCS))
 BUFFERSIZE = 16777216
 CPPLAGS += -DBUFFERSIZE=$(BUFFERSIZE)
 
-all: crypto_hybrid.exe
+all: crypto_hybrid$(EXT)
 
-crypto_hybrid.exe: $(OBJS)
-	$(CXX) -o crypto_hybrid.exe $(CPPFLAGS) $(OBJS) $(LDFLAGS) $(LDLIBS) 
+crypto_hybrid$(EXT): $(OBJS)
+	$(CXX) -o crypto_hybrid$(EXT) $(CPPFLAGS) $(OBJS) $(LDFLAGS) $(LDLIBS) 
 
 depend: .depend
 
@@ -64,7 +78,7 @@ objclean:
 	$(RM) $(OBJS)
 
 clean: objclean
-	$(RM) .depend *.o crypto_hybrid.exe decrypted.txt encrypted.txt
+	$(RM) .depend *.o crypto_hybrid$(EXT) decrypted.txt encrypted.txt
 
 remake: clean all
 
