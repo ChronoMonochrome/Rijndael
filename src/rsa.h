@@ -1,6 +1,8 @@
 #include "cryptkey.h"
 #include <fstream>
 
+//key length (decimal digits)
+#define KEYLENGTH 80
 
 using namespace std;
 

@@ -1,9 +1,5 @@
 #include "rsa.h"
 
-
-//key length (decimal digits)
-#define KEYLENGTH 80
-
 void rsa::RSA_do_encrypt_from_file(char *infile, char *outfile, char *pubKey)
 {
         cryptkey publicKey;
@@ -211,6 +207,8 @@ void rsa::encryptTxtFile(const char *in, const char *out, cryptkey &key)
 {
   string buff;
   vector <char> a = key.a.toBinary();
+
+  struct stat st;
 
   ifstream input (in, ios_base::in | ios_base::binary);
   if (!input.good())

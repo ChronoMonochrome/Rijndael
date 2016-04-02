@@ -3,6 +3,9 @@
 #include <ctime>
 #include <string.h>
 
+#include <sys/stat.h>
+#include "exceptions.h"
+
 #include "misc.h"
 #include "aes.h"
 #include "rsa.h"
@@ -22,6 +25,13 @@ void encrypt(char *infile, char *outfile, char *pubKey)
 	unsigned long *AES_key;
 	unsigned char *encrypted_iv;
 	unsigned char *decrypted_iv;
+
+	struct stat st;
+	stat(infile, &st);
+	if (st.st_size > KEYLENGTH * 3) {
+		throw rsaErr("input file is too large!");
+	}
+
 
 	char *f_tmp_iv, *f_iv, *f_encrypted_iv, *f_AES_cipher, *f_RSA_AES_cipher;
 	AES_key = (unsigned long *) calloc(4, sizeof(unsigned long *));
@@ -53,10 +63,12 @@ void encrypt(char *infile, char *outfile, char *pubKey)
 	SHA256(iv, 8, sh);
 	memcpy(&gamma[24], sh, 8);
 
+#ifdef PRINTOUT
 	for (i = 0; i < 32; i++) {
 		printf("%02x ", gamma[i]);
 	}
 	printf("\n");
+#endif
 
 	f_tmp_iv = getTempFilePath("tmp_iv.txt");
 	file::writeToFile(f_tmp_iv, gamma, 32);
@@ -150,10 +162,13 @@ void decrypt(char *infile, char *outfile, char *privKey)
 	decode(f_tmp_decrypted_iv, f_decrypted_iv);
 
 	file::readFromFile(f_decrypted_iv, decrypted_iv, 0, len);
+
+#ifdef PRINTOUT
     	for (i = 0; i < 32; i++) {
         	printf("%02x ", decrypted_iv[i]);
     	}
    	printf("\n");
+#endif
 
 	AES_key[0] = decrypted_iv[0] << 24 + decrypted_iv[1] << 16 + decrypted_iv[2] << 8 + decrypted_iv[3];
 	AES_key[1] = decrypted_iv[4] << 24 + decrypted_iv[5] << 16 + decrypted_iv[6] << 8 + decrypted_iv[7];
@@ -185,7 +200,7 @@ void decrypt(char *infile, char *outfile, char *privKey)
 int main(int argc, char *argv[])
 {
   cout << "AES/RSA hybrid cryptosystem\n"; 
-  cout << "Copyright (c) 2015 Shilin Victor\n\n";
+  cout << "Copyright (c) 2015-2016 Shilin Victor\n\n";
 
 
   try

@@ -1,3 +1,6 @@
+#ifndef EXCEPTIONS_H
+#define EXCEPTIONS_H
+
 class mathErr
 {
   const char *What;
@@ -26,3 +29,5 @@ public:
   const char *filename () { return Filename; }
   fileErr(const char *inp):Filename (inp) {}
 };
+
+#endif
