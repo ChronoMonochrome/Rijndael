@@ -10,7 +10,6 @@
 #include "file.h"
 
 
-#include "sha256.h"
 #include "lkm.h"
 
 unsigned char *iv, *sh, *gamma;

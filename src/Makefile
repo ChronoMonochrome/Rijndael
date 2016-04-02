@@ -58,7 +58,7 @@ endif
 
 LDFLAGS+=-Wl,-no-undefined --enable-runtime-pseudo-reloc -L. -L./lib
 
-DLL_SRCS=aes.cpp hugeint.cpp rsa.cpp base64.cpp sha256.cpp lkm.cpp
+DLL_SRCS=aes.cpp hugeint.cpp rsa.cpp base64.cpp lkm.cpp
 SRCS=main.cpp file.cpp
 
 OBJS=$(subst .cpp,.o,$(SRCS))
