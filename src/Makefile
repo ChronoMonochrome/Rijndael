@@ -32,9 +32,10 @@ LTO_FLAGS=-flto=jobserver \
 
 
 
-CPPFLAGS=-Wall \
+CPPFLAGS=-Wall -Wno-write-strings -Wno-parentheses \
 	-Werror=implicit-function-declaration \
 	-I./include \
+	-fno-strict-aliasing \
 	-O2 \
 	-ffast-math \
 	-funsafe-loop-optimizations \

@@ -26,19 +26,21 @@ void encrypt(char *infile, char *outfile, char *pubKey)
 	AES_key = (unsigned long *) calloc(4, sizeof(unsigned long *));
 	encrypted_iv = (unsigned char *)malloc(BUFSIZE);
 	decrypted_iv = (unsigned char *)malloc(BUFSIZE);
+	iv = (unsigned char *)malloc(32);
+	sh = (unsigned char *)malloc(32);
+
 
 	LKM lkm;
 	lkm.initialize_by_ctime_function();
 
 
 	printf("Generating the IV\n");
-	iv = (unsigned char *)malloc(32);
 
-	lkm.RAND_bytes(iv, 32);
+	lkm.RAND_bytes(sh, 32);
 
-	std::string outp(reinterpret_cast<char*>(iv));
+	//std::string outp(reinterpret_cast<char*>(iv));
 	//string outp = sha256(std::string(iv));
-	sh = (unsigned char*)outp.c_str();
+	//sh = (unsigned char*)outp.c_str();
 	//SHA256(iv, 8, sh);
 
 	for (i = 0; i < 32; i++) {

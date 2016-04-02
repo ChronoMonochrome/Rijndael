@@ -30,5 +30,5 @@ unsigned char *LKM::RAND_bytes(unsigned char *buf, int len)
 {
 	int i;
 	for (i = 0; i < len; i++)
-		buf[i] = generate_in_interval(0, 255);
+		buf[i] = generate_in_interval(0, 255) ^ 127;
 }
