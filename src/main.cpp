@@ -11,11 +11,6 @@
 #include "base64.h"
 #include "file.h"
 
-#ifdef WIN
-#define TEMP "%TEMP%/"
-#else
-#define TEMP "/tmp/"
-#endif
 
 unsigned char iv[32];
 unsigned char sh[32];
@@ -44,16 +39,14 @@ void encrypt(char *infile, char *outfile, char *pubKey)
 	}
 	printf("\n");
 
-	file::writeToFile(TEMP"tmp_iv.txt", sh, 32);
-	// base64->encode
-	encode(TEMP"tmp_iv.txt", TEMP"iv.txt");
+	file::writeToFile("tmp_iv.txt", sh, 32);
 
+	// base64->encode
+	encode("tmp_iv.txt", "iv.txt");
 
 	printf("Encrypting IV\n");
-	rsa::RSA_do_encrypt_from_file(TEMP"iv.txt", TEMP"encrypted_iv.txt", pubKey);
-
-	len = file::readFromFile(TEMP"encrypted_iv.txt", encrypted_iv, 0, BUFSIZE);
-
+	rsa::RSA_do_encrypt_from_file("iv.txt", "encrypted_iv.txt", pubKey);
+	len = file::readFromFile("encrypted_iv.txt", encrypted_iv, 0, BUFSIZE);
 	FILE *encrypted = fopen(outfile, "wb+");
 	fwrite(&len, sizeof(int), 1, encrypted);
 	fwrite(encrypted_iv, len, 1, encrypted);
@@ -63,19 +56,18 @@ void encrypt(char *infile, char *outfile, char *pubKey)
 	AES_key[1] = sh[4] << 24 + sh[5] << 16 + sh[6] << 8 + sh[7];
 	AES_key[2] = sh[8] << 24 + sh[9] << 16 + sh[10] << 8 + sh[11];
 	AES_key[3] = sh[12] << 24 + sh[13] << 16 + sh[14] << 8 + sh[15];
-
-	aes::AES_do_encrypt_from_file(infile, TEMP"AES_cipher.txt", AES_key);
-
-	rsa::RSA_do_encrypt_from_file(TEMP"AES_cipher.txt", TEMP"RSA_AES_cipher.txt", "public_key");
-	remove(TEMP"AES_cipher.txt");
-
-	file::writeToFP(TEMP"RSA_AES_cipher.txt", encrypted);
+	
+	aes::AES_do_encrypt_from_file(infile, "AES_cipher.txt", AES_key);
+	
+	rsa::RSA_do_encrypt_from_file("AES_cipher.txt", "RSA_AES_cipher.txt", "public_key");
+	remove("AES_cipher.txt");
+	
+	file::writeToFP("RSA_AES_cipher.txt", encrypted);
 	printf("%s has been successfully encrypted and written to %s\n", infile, outfile);
 	fclose(encrypted);
- 	remove(TEMP"RSA_AES_cipher.txt");
- 	remove(TEMP"iv.txt");
- 	remove(TEMP"tmp_iv.txt");
- 	remove(TEMP"encrypted_iv.txt");
+ 	remove("RSA_AES_cipher.txt");
+ 	remove("iv.txt");
+ 	remove("encrypted_iv.txt");
 
 	free(decrypted_iv);
 	free(encrypted_iv);
@@ -103,7 +95,7 @@ void decrypt(char *infile, char *outfile, char *privKey)
 	fread(encrypted_iv, len, 1, encrypted);
 
 	printf("Decrypting the source\n");
-	FILE *encrypted_message = fopen(TEMP"encrypted_message.txt", "wb+");
+	FILE *encrypted_message = fopen("encrypted_message.txt", "wb+");
         for(;;) {
                 inlen = fread(buf, 1, BUFSIZE, encrypted);
                 if(inlen <= 0) break;
@@ -112,15 +104,12 @@ void decrypt(char *infile, char *outfile, char *privKey)
 	fclose(encrypted);
 	fclose(encrypted_message);
 
- 	file::writeToFile(TEMP"encrypted_iv.txt", encrypted_iv, len);
-
-	rsa::RSA_do_decrypt_from_file(TEMP"encrypted_iv.txt", TEMP"tmp_decrypted_iv.txt", privKey);
+	rsa::RSA_do_decrypt_from_file("encrypted_iv.txt", "tmp_decrypted_iv.txt", privKey);
 
 	// base64->decode
-	decode(TEMP"tmp_decrypted_iv.txt", TEMP"decrypted_iv.txt");
-	//remove(TEMP"tmp_decrypted_iv.txt");
+	decode("tmp_decrypted_iv.txt", "decrypted_iv.txt");
 
-	file::readFromFile(TEMP"decrypted_iv.txt", decrypted_iv, 0, len);
+	file::readFromFile("decrypted_iv.txt", decrypted_iv, 0, len);
     	for (i = 0; i < 32; i++) {
         	printf("%02x ", decrypted_iv[i]);
     	}
@@ -131,21 +120,20 @@ void decrypt(char *infile, char *outfile, char *privKey)
 	AES_key[2] = decrypted_iv[8] << 24 + decrypted_iv[9] << 16 + decrypted_iv[10] << 8 + decrypted_iv[11];
 	AES_key[3] = decrypted_iv[12] << 24 + decrypted_iv[13] << 16 + decrypted_iv[14] << 8 + decrypted_iv[15];
 
-	remove(TEMP"encrypted_iv.txt");
-	remove(TEMP"decrypted_iv.txt");
+	remove("encrypted_iv.txt");
+	remove("decrypted_iv.txt");
 
-	rsa::RSA_do_decrypt_from_file(TEMP"encrypted_message.txt", TEMP"decrypted_RSA_AES_cipher.txt", privKey);
-	remove(TEMP"encrypted_message.txt");
-	aes::AES_do_decrypt_from_file(TEMP"decrypted_RSA_AES_cipher.txt", outfile, AES_key);
+	rsa::RSA_do_decrypt_from_file("encrypted_message.txt", "decrypted_RSA_AES_cipher.txt", privKey);
+	remove("encrypted_message.txt");
+	aes::AES_do_decrypt_from_file("decrypted_RSA_AES_cipher.txt", outfile, AES_key);
 	printf("%s has been successfully decrypted and written to %s\n", infile, outfile);
 
+	remove("decrypted_RSA_AES_cipher.txt");
 
 	free(buf);
 	free(encrypted_iv);
 	free(decrypted_iv);
 	free(AES_key);
-	//remove(TEMP"decrypted_RSA_AES_cipher.txt");
-
 }
 
 int main(int argc, char *argv[])
@@ -269,6 +257,8 @@ int main(int argc, char *argv[])
     cout << "Error: unable to open file " << err.filename() << endl;
     return 1;
   }
+
+ // system("pause");
 
   return 0;
 }
