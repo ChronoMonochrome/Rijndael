@@ -2,7 +2,7 @@
 #CC=gcc#
 #CXX=i586-mingw32msvc-g++#
 
-UNIX=1
+#UNIX=1
 
 ifeq ($(UNIX), 1)
 CXX=g++
@@ -48,25 +48,52 @@ CPPFLAGS=-Wall \
 
 ifneq ($(UNIX), 1)
 CPPFLAGS+=-DWIN -march=atom
-LDFLAGS=-static 
+LDFLAGS=
 LDLIBS=./lib/libssl.a ./lib/libcrypto.a ./lib/libgdi32.a
+#LDLIBS=-lssl -lcrypto -lgdi32
+
 else
 CPPFLAGS+=-march=sandybridge
-LDLIBS=-lssl -lcrypto
+LDFLAGS=
+#LDLIBS=-lssl -lcrypto
 endif
+
+LDFLAGS+=-Wl,-no-undefined --enable-runtime-pseudo-reloc -L. -L./lib
 
 #-Wl,-flto
 #-lssl -lcrypto  -Wl,-flto
-SRCS=main.cpp aes.cpp hugeint.cpp rsa.cpp file.cpp base64.cpp
+
+DLL_SRCS=aes.cpp hugeint.cpp rsa.cpp base64.cpp
+SRCS=main.cpp file.cpp $(DLL_SRCS)
+
 OBJS=$(subst .cpp,.o,$(SRCS))
+
+#DLL_OBJS=$(subst .cpp,.o,$(DLL_SRCS))
 
 BUFFERSIZE = 16777216
 CPPLAGS += -DBUFFERSIZE=$(BUFFERSIZE)
 
 all: crypto_hybrid$(EXT)
+#libcrypto_hybrid.dll
+#libcrypto.dll libssl.dll libgdi32.dll
+
+#libcrypto.dll: ./lib/libcrypto.a
+#	$(CXX) -shared -o libcrypto.dll -Wl,--whole-archive $(LDFLAGS) -lcrypto -Wl,--no-whole-archive
+#
+#libssl.dll: ./lib/libssl.a
+#	$(CXX) -shared -o libssl.dll -Wl,--whole-archive $(LDFLAGS) -lssl -Wl,--no-whole-archive
+#
+#libgdi32.dll: ./lib/libgdi32.a
+#	$(CXX) -shared -o libgdi32.dll -Wl,--whole-archive $(LDFLAGS) -lgdi32 -Wl,--no-whole-archive
+
+#libcrypto_hybrid.dll: $(DLL_OBJS)
+#	$(CXX) -shared -o libcrypto_hybrid.dll -Wl,--whole-archive $(CPPFLAGS) $(DLL_OBJS) $(LDFLAGS) -Wl,--no-whole-archive
 
 crypto_hybrid$(EXT): $(OBJS)
-	$(CXX) -o crypto_hybrid$(EXT) $(CPPFLAGS) $(OBJS) $(LDFLAGS) $(LDLIBS) 
+#libcrypto_hybrid.dll libcrypto.dll libssl.dll libgdi32.dll
+	$(CXX) -static -o crypto_hybrid$(EXT) $(CPPFLAGS) $(OBJS) $(LDFLAGS) $(LDLIBS)
+#libcrypto_hybrid.dll
+#libcrypto.dll libssl.dll libgdi32.dll
 
 depend: .depend
 
@@ -78,7 +105,7 @@ objclean:
 	$(RM) $(OBJS)
 
 clean: objclean
-	$(RM) .depend *.o crypto_hybrid$(EXT) decrypted.txt encrypted.txt
+	$(RM) .depend *.o crypto_hybrid$(EXT) libcrypto_hybrid.dll decrypted.txt encrypted.txt
 
 remake: clean all
 
