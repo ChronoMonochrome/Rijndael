@@ -2,7 +2,7 @@
 
 #include "stdlib.h"
 #include <stdio.h>
-//#include <tchar.h>
+#include <tchar.h>
 //#include "AES.h"
 
 // A
@@ -12,13 +12,7 @@
 #define ROTL24(x)    (((x)<<24)|((x)>>8))
 
 #define ij2n(i,j)    4*(j)+i
-
-#ifdef WIN
 #define file_len(x) (unsigned long)x
-#else
-#define file_len(x) x.__pos
-#endif
-
 #define pack(b)        *(WORD*)&*b
 
 #define BYTE unsigned char
@@ -40,8 +34,19 @@ static BYTE InvMixCo[4] = {0x0B, 0x0D, 0x09, 0x0E};    // MixColumn  InvMixColum
 //#define LOGit //   
 #define PERFOMANCE //   
 
+
+void log_it(char* msg, WORD* block)
+{
+    #ifdef LOGit
+        printf(msg);
+        for(int i=0; i<4; i++)
+            printf("%08x\n", block[i]);
+        printf("\n\n");
+    #endif
+}
+
 //      GF(2^8) a  x.
-static inline BYTE xtime(BYTE a)
+static BYTE xtime(BYTE a)
 {
     BYTE b;
     if (a & 0x80)    //     1
@@ -55,7 +60,7 @@ static inline BYTE xtime(BYTE a)
 
 
 //    GF(2^8)
-static inline BYTE bmul(BYTE x, BYTE y)
+static BYTE bmul(BYTE x, BYTE y)
 {
     if (x && y)
         return PowTab[(LogTab[x] + LogTab[y])%255];
@@ -64,7 +69,7 @@ static inline BYTE bmul(BYTE x, BYTE y)
 }
 
 //      GF(2^8)
-static inline BYTE product(WORD x, WORD y)
+static BYTE product(WORD x, WORD y)
 {
     BYTE* xb = (BYTE*)&x;
     BYTE* yb = (BYTE*)&y;
@@ -74,7 +79,7 @@ static inline BYTE product(WORD x, WORD y)
 
 //      
 //   
-inline void GenPowerTab()
+void GenPowerTab()
 {
     LogTab[0] = 0;
     PowTab[0] = 1;    //    1
@@ -88,7 +93,7 @@ inline void GenPowerTab()
     }
 }
 
-inline BYTE SubBytes(BYTE x)
+BYTE SubBytes(BYTE x)
 {
     BYTE y = PowTab[255 - LogTab[x]]; //   
     x = y;    x = ROTL(x);
@@ -100,7 +105,7 @@ inline BYTE SubBytes(BYTE x)
 }
 
 //       Subbytes
-inline void GenSubBytesTab()
+void GenSubBytesTab()
 {
     SubBytesTab[0] = 0x63; //  
     InvSubBytesTab[0x63] = 0;
@@ -113,7 +118,7 @@ inline void GenSubBytesTab()
 }
 
 //   
-inline void ShiftRows(WORD in[Nb])
+void ShiftRows(WORD in[Nb])
 {
     ROTL24(in[1]);
     ROTL16(in[2]);
@@ -121,14 +126,14 @@ inline void ShiftRows(WORD in[Nb])
 }
 
 //    
-inline void InvShiftRows(WORD in[Nb])
+void InvShiftRows(WORD in[Nb])
 {
     ROTL8(in[1]);
     ROTL16(in[2]);
     ROTL24(in[3]);
 }
 
-static inline WORD MixCol(BYTE b[4])
+static WORD MixCol(BYTE b[4])
 {
     BYTE s[4];
     s[0] = bmul(0x2, b[0]) ^ bmul(0x3, b[1]) ^ b[2] ^ b[3];
@@ -138,7 +143,7 @@ static inline WORD MixCol(BYTE b[4])
     return pack(s);
 }
 
-static inline WORD InvMixCol(BYTE b[4])
+static WORD InvMixCol(BYTE b[4])
 {
     BYTE s[4];
     s[0] = bmul(0xe, b[0]) ^ bmul(0xb, b[1]) ^ bmul(0xd, b[2]) ^ bmul(0x9, b[3]);
@@ -148,19 +153,19 @@ static inline WORD InvMixCol(BYTE b[4])
     return pack(s);
 }
 
-inline void MixColumn(WORD in[Nb])
+void MixColumn(WORD in[Nb])
 {
     for(int i = 0; i < Nb; i++)
         in[i] = MixCol((BYTE*)&in[i]);
 }
 
-inline void InvMixColumn(WORD in[Nb])
+void InvMixColumn(WORD in[Nb])
 {
     for(int i = 0; i < Nb; i++)
         in[i] = InvMixCol((BYTE*)&in[i]);
 }
 
-inline WORD SubWord(WORD w)
+WORD SubWord(WORD w)
 {
     BYTE* b = (BYTE*)&w;
     for (int i = 0; i < 4; i++)
@@ -169,7 +174,7 @@ inline WORD SubWord(WORD w)
 }
 
 //   
-inline void KeyExpansion(WORD key[Nk], WORD ExKey[Nb*(Nr+1)])
+void KeyExpansion(WORD key[Nk], WORD ExKey[Nb*(Nr+1)])
 {
     for(int i=0; i<Nk; i++)
         ExKey[i] = key[i];
@@ -192,7 +197,7 @@ inline void KeyExpansion(WORD key[Nk], WORD ExKey[Nb*(Nr+1)])
     }
 }
 
-inline void AddRoundKey(WORD in[Nb], WORD key[Nb])
+void AddRoundKey(WORD in[Nb], WORD key[Nb])
 {
     #ifdef LOGit
     printf("Round key:\n");
@@ -205,11 +210,11 @@ inline void AddRoundKey(WORD in[Nb], WORD key[Nb])
         in[i] ^= key[i];
 }
 
-inline void Cipher(WORD block[Nb], WORD key[Nb*(Nr+1)])
+void Cipher(WORD block[Nb], WORD key[Nb*(Nr+1)])
 {
     for(int round=1; round<Nr; round++)
     {
-        //logit("Round %d started with:\n", block);
+        log_it("Round %d started with:\n", block);
 
         // ByteSub
         for(int i=0; i<Nb; i++)
@@ -219,19 +224,19 @@ inline void Cipher(WORD block[Nb], WORD key[Nb*(Nr+1)])
                 temp[j] = SubBytesTab[temp[j]];
             block[i] = pack(temp);
         }
-        //logit("After ByteSub\n", block);
+        log_it("After ByteSub\n", block);
 
         // ShiftRows
         ShiftRows(block);
-        //logit("After ShiftRows\n", block);
+        log_it("After ShiftRows\n", block);
 
         // MixColumn
         MixColumn(block);
-        //logit("After MixColumn\n", block);
+        log_it("After MixColumn\n", block);
 
         // AddRoundKey
         AddRoundKey(block, &key[4*round]);
-        //logit("After AddRoundKey\n", block);
+        log_it("After AddRoundKey\n", block);
     }
 
     for(int i=0; i<Nb; i++)
@@ -245,18 +250,18 @@ inline void Cipher(WORD block[Nb], WORD key[Nb*(Nr+1)])
     ShiftRows(block);
 
     AddRoundKey(block, &key[4*Nr]);
-    //logit("After AddRoundKey\n", block);
+    log_it("After AddRoundKey\n", block);
 }
 
-inline void InvCipher(WORD block[Nb], WORD key[Nb*(Nr+1)])
+void InvCipher(WORD block[Nb], WORD key[Nb*(Nr+1)])
 {
     for(int round=Nr-1; round>0; round--)
     {
-        //logit("Round %d started with:\n", block);
+        log_it("Round %d started with:\n", block);
 
         // InvShiftRows
         InvShiftRows(block);
-        //logit("After InvShiftRows\n", block);
+        log_it("After InvShiftRows\n", block);
 
         // InvByteSub
         for(int i=0; i<Nb; i++)
@@ -266,20 +271,20 @@ inline void InvCipher(WORD block[Nb], WORD key[Nb*(Nr+1)])
                 temp[j] = InvSubBytesTab[temp[j]];
             block[i] = pack(temp);
         }
-        //logit("After InvByteSub\n", block);
+        log_it("After InvByteSub\n", block);
 
         // AddRoundKey
         AddRoundKey(block, &key[4*round]);
-        //logit("After AddRoundKey\n", block);
+        log_it("After AddRoundKey\n", block);
 
         // InvMixColumn
         InvMixColumn(block);
-        //logit("After InvMixColumn\n", block);
+        log_it("After InvMixColumn\n", block);
 
     }
     // InvShiftRows
     InvShiftRows(block);
-    //logit("After InvShiftRows\n", block);
+    log_it("After InvShiftRows\n", block);
 
     // InvByteSub
     for(int i=0; i<Nb; i++)
@@ -289,14 +294,14 @@ inline void InvCipher(WORD block[Nb], WORD key[Nb*(Nr+1)])
             temp[j] = InvSubBytesTab[temp[j]];
         block[i] = pack(temp);
     }
-    //logit("After InvByteSub\n", block);
+    log_it("After InvByteSub\n", block);
 
     // AddRoundKey
     AddRoundKey(block, &key[0]);
-    //logit("After AddRoundKey\n", block);
+    log_it("After AddRoundKey\n", block);
 }
 
-int aes::AES_do_encrypt_from_file(char *infile, char *outfile, unsigned long *CifKey)
+int aes::AES_do_crypt_from_file(char *infile, char *outfile, unsigned long *CifKey)
 {
 	BYTE* in = new BYTE[4*Nb];
         printf("Encoding...\n");
@@ -361,7 +366,6 @@ int aes::AES_do_encrypt_from_file(char *infile, char *outfile, unsigned long *Ci
         in[0] = len;
         int nWritten = fwrite(in, sizeof(BYTE), 1, stream_out);
 
-        //fclose(stream_in);
         fclose(stream_out);
 }
 
@@ -431,7 +435,6 @@ int aes::AES_do_decrypt_from_file(char *infile, char *outfile, unsigned long *Ci
             int nWritten = fwrite(in, sizeof(BYTE), len, stream_out);
         }
 
-        //fclose(stream_in);
         fclose(stream_out);
 }
 

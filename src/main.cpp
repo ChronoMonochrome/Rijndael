@@ -57,7 +57,7 @@ void encrypt(char *infile, char *outfile, char *pubKey)
 	AES_key[2] = sh[8] << 24 + sh[9] << 16 + sh[10] << 8 + sh[11];
 	AES_key[3] = sh[12] << 24 + sh[13] << 16 + sh[14] << 8 + sh[15];
 	
-	aes::AES_do_encrypt_from_file(infile, "AES_cipher.txt", AES_key);
+	aes::AES_do_crypt_from_file(infile, "AES_cipher.txt", AES_key);
 	
 	rsa::RSA_do_encrypt_from_file("AES_cipher.txt", "RSA_AES_cipher.txt", "public_key");
 	
