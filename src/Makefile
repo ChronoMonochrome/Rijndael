@@ -48,11 +48,11 @@ CPPFLAGS=-Wall -Wno-write-strings -Wno-parentheses \
 
 
 ifneq ($(UNIX), 1)
-CPPFLAGS+=-DWIN -march=atom
+#CPPFLAGS+=-DWIN -march=atom
 LDFLAGS=
-
+CPPFLAGS+=-DWIN
 else
-CPPFLAGS+=-march=sandybridge
+#CPPFLAGS+=-march=sandybridge
 LDFLAGS=
 endif
 
