@@ -1,6 +1,3 @@
-#include <openssl/evp.h>
-#include <openssl/rand.h>
-#include <openssl/sha.h>
 #include <stdio.h>
 #include <ctime>
 #include <string.h>
@@ -12,8 +9,11 @@
 #include "file.h"
 
 
-unsigned char iv[32];
-unsigned char sh[32];
+#include "sha256.h"
+#include "lkm.h"
+
+unsigned char *iv;
+unsigned char *sh;
 
 void encrypt(char *infile, char *outfile, char *pubKey)
 {
@@ -27,12 +27,19 @@ void encrypt(char *infile, char *outfile, char *pubKey)
 	encrypted_iv = (unsigned char *)malloc(BUFSIZE);
 	decrypted_iv = (unsigned char *)malloc(BUFSIZE);
 
+	LKM lkm;
+	lkm.initialize_by_ctime_function();
 
-	srand(time(0));
+
 	printf("Generating the IV\n");
-	RAND_bytes(iv, 8);
+	iv = (unsigned char *)malloc(32);
 
-	SHA256(iv, 8, sh);
+	lkm.RAND_bytes(iv, 32);
+
+	std::string outp(reinterpret_cast<char*>(iv));
+	//string outp = sha256(std::string(iv));
+	sh = (unsigned char*)outp.c_str();
+	//SHA256(iv, 8, sh);
 
 	for (i = 0; i < 32; i++) {
 		printf("%02x ", sh[i]);
@@ -70,6 +77,8 @@ void encrypt(char *infile, char *outfile, char *pubKey)
 	//remove("AES_cipher.txt");
 
 
+	free(iv);
+	free(sh);
 	free(decrypted_iv);
 	free(encrypted_iv);
 	free(AES_key);
