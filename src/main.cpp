@@ -60,14 +60,15 @@ void encrypt(char *infile, char *outfile, char *pubKey)
 	aes::AES_do_encrypt_from_file(infile, "AES_cipher.txt", AES_key);
 	
 	rsa::RSA_do_encrypt_from_file("AES_cipher.txt", "RSA_AES_cipher.txt", "public_key");
-	remove("AES_cipher.txt");
 	
 	file::writeToFP("RSA_AES_cipher.txt", encrypted);
 	printf("%s has been successfully encrypted and written to %s\n", infile, outfile);
 	fclose(encrypted);
- 	remove("RSA_AES_cipher.txt");
- 	remove("iv.txt");
- 	remove("encrypted_iv.txt");
+ 	//remove("RSA_AES_cipher.txt");
+ 	//remove("iv.txt");
+ 	//remove("encrypted_iv.txt");
+	//remove("AES_cipher.txt");
+
 
 	free(decrypted_iv);
 	free(encrypted_iv);
@@ -120,15 +121,15 @@ void decrypt(char *infile, char *outfile, char *privKey)
 	AES_key[2] = decrypted_iv[8] << 24 + decrypted_iv[9] << 16 + decrypted_iv[10] << 8 + decrypted_iv[11];
 	AES_key[3] = decrypted_iv[12] << 24 + decrypted_iv[13] << 16 + decrypted_iv[14] << 8 + decrypted_iv[15];
 
-	remove("encrypted_iv.txt");
-	remove("decrypted_iv.txt");
 
 	rsa::RSA_do_decrypt_from_file("encrypted_message.txt", "decrypted_RSA_AES_cipher.txt", privKey);
-	remove("encrypted_message.txt");
 	aes::AES_do_decrypt_from_file("decrypted_RSA_AES_cipher.txt", outfile, AES_key);
 	printf("%s has been successfully decrypted and written to %s\n", infile, outfile);
 
-	remove("decrypted_RSA_AES_cipher.txt");
+	//remove("encrypted_iv.txt");
+	//remove("decrypted_iv.txt");
+	//remove("encrypted_message.txt");
+	//remove("decrypted_RSA_AES_cipher.txt");
 
 	free(buf);
 	free(encrypted_iv);
