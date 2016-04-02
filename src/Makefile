@@ -74,7 +74,7 @@ libcrypto_hybrid.dll: $(DLL_OBJS)
 	$(CXX) -shared -o libcrypto_hybrid.dll -Wl,--whole-archive $(CPPFLAGS) $(DLL_OBJS) $(LDFLAGS) -Wl,--no-whole-archive
 
 crypto_hybrid$(EXT): $(OBJS) libcrypto_hybrid.dll
-	$(CXX)  -o crypto_hybrid$(EXT) $(CPPFLAGS) $(OBJS) $(LDFLAGS) $(LDLIBS) libcrypto_hybrid.dll
+	$(CXX)  -o crypto_hybrid$(EXT) $(CPPFLAGS) $(OBJS) $(LDFLAGS) $(LDLIBS) libcrypto_hybrid.dll libcrypto.dll
 
 depend: .depend
 

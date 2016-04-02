@@ -214,7 +214,7 @@ void rsa::encryptTxtFile(const char *in, const char *out, cryptkey &key)
 
   ifstream input (in, ios_base::in | ios_base::binary);
   if (!input.good())
-    throw rsaErr("unable to open input file");
+    throw rsaErr(in);
 
 
   ofstream output(out, ios_base::out | ios_base::binary);

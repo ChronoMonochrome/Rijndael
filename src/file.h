@@ -15,4 +15,6 @@ int static writeToFile(char *outfile, unsigned char *outbuf, int outbuf_len);
 int static writeToFP(char *infile, FILE *foutfile);
 };
 
+char *getTempDirPath();
+char *getTempFilePath(char *name);
 #endif

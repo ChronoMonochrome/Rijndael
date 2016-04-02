@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <cstdlib>
 #include "file.h"
 #include "misc.h"
@@ -65,3 +66,30 @@ int file::writeToFP(char *infile, FILE *foutfile)
 	fclose(finfile);
 
 }
+
+#ifdef WIN
+char *getTempDirPath()
+{
+	return getenv("TEMP");
+}
+#else
+#define getTempDirPath "/tmp/"
+#endif
+
+
+char *getTempFilePath(char *name)
+{
+	char *buf = (char *)malloc(512);
+	memset(buf, 0, 512);
+
+	strncpy(buf, getTempDirPath(), 256);
+#ifdef WIN
+	strncat(buf, "\\", 1);
+#endif
+
+	strncat(buf, name, strlen(name));
+	//printf("%s\n", buf);
+
+	return buf;
+}
+

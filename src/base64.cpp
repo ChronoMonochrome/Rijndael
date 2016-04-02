@@ -216,7 +216,7 @@ void encode(const char *infile, const char *outfile)
 	ifstream instream(input.c_str(), ios_base::in | ios_base::binary);
 	if (!instream.is_open())
 	{
-		printf("Could not open input file!\n");
+		printf("base64: Could not open input file!\n");
 		exit(-1);
 	}
 	
@@ -228,7 +228,7 @@ void encode(const char *infile, const char *outfile)
 	ofstream outstream(output.c_str(), ios_base::out | ios_base::binary);
 	if (!outstream.is_open())
 	{
-		printf("Could not open output file!\n");
+		printf("base64: Could not open output file!\n");
 		exit(-1);
 	}
 
